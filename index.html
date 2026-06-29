@@ -743,20 +743,27 @@ function processarArquivo(file) {
     const ws   = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
-    const achar = (row, ...termos) => {
-      const k = Object.keys(row).find(c => termos.some(t => c.toLowerCase().replace(/[\s_]/g,'').includes(t)));
+    // Mapeamento exato das colunas da planilha:
+    // DN | CNPJ | NOME DA LOJA | GCM (responsável) | NOME (logradouro) | Nº | BAIRRO | CEP | ZONA
+    const col = (row, ...chaves) => {
+      const k = Object.keys(row).find(c =>
+        chaves.some(ch => c.trim().toLowerCase() === ch.toLowerCase())
+      ) || Object.keys(row).find(c =>
+        chaves.some(ch => c.trim().toLowerCase().includes(ch.toLowerCase()))
+      );
       return k ? String(row[k]).trim() : '';
     };
 
     const dados = rows.map(r => ({
-      dn:        achar(r,'dn'),
-      cnpj:      achar(r,'cnpj'),
-      nome_loja: achar(r,'nomeloja','nome_loja') || achar(r,'nome') || achar(r,'loja'),
-      logradouro:achar(r,'logradouro','rua','avenida','gcm','endereco'),
-      numero:    achar(r,'nº','numero','n°','num'),
-      bairro:    achar(r,'bairro'),
-      cep:       achar(r,'cep'),
-      zona:      achar(r,'zona'),
+      dn:         col(r, 'DN'),
+      cnpj:       col(r, 'CNPJ'),
+      nome_loja:  col(r, 'NOME DA LOJA', 'NOMELOJA', 'NOME_LOJA'),
+      gcm:        col(r, 'GCM'),
+      logradouro: col(r, 'NOME'),      // coluna NOME = logradouro na planilha
+      numero:     col(r, 'Nº', 'N°', 'NUMERO', 'NUM'),
+      bairro:     col(r, 'BAIRRO'),
+      cep:        col(r, 'CEP'),
+      zona:       col(r, 'ZONA'),
     })).filter(l => l.nome_loja);
 
     if (!dados.length) return toast('Nenhuma loja encontrada', 'err');
@@ -778,14 +785,18 @@ function processarArquivo(file) {
 
 async function importar(dados) {
   toast('Importando...', '');
-  const { error } = await sb.from('lojas').insert(dados);
+  // Upsert: atualiza se DN já existe, insere se é novo
+  // Preserva latitude/longitude de lojas já geocodificadas
+  const { error } = await sb.from('lojas').upsert(dados, {
+    onConflict: 'dn',
+    ignoreDuplicates: false
+  });
   if (error) return toast('Erro: ' + error.message, 'err');
   document.getElementById('preview').innerHTML = '';
   document.getElementById('fileIn').value = '';
-  toast(`${dados.length} lojas importadas! Iniciando geocodificação...`, 'ok');
+  toast(`${dados.length} lojas importadas/atualizadas! ✅`, 'ok');
   await carregarTabelaLojas();
   await carregarLojas();
-  // Geocodifica automaticamente depois do import
   setTimeout(geocodificarPendentes, 1500);
 }
 
