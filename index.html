@@ -67,10 +67,12 @@
       font-family: var(--font);
       font-size: 0.82rem;
       font-weight: 500;
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 8px;
       cursor: pointer;
       transition: all .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     nav button:hover { background: rgba(255,255,255,0.1); color: #fff; }
     nav button.active { background: var(--green); color: #fff; }
@@ -367,8 +369,35 @@ function showPage(name) {
 
 // ── CARREGAR LOJAS DO DIA ──
 async function carregarLojas() {
-  const { data, error } = await supabase.from('visitas_hoje').select('*').order('zona').order('nome_loja');
-  if (error) return toast('Erro ao carregar lojas: ' + error.message, 'error');
+  // Tenta via view primeiro
+  let { data, error } = await supabase.from('visitas_hoje').select('*').order('zona').order('nome_loja');
+
+  if (error) {
+    // Fallback: busca direto das tabelas
+    console.warn('View visitas_hoje indisponível, usando fallback:', error.message);
+    const { data: lojas, error: e2 } = await supabase.from('lojas').select('*').eq('ativa', true).order('zona').order('nome_loja');
+    if (e2) {
+      document.getElementById('listaLojas').innerHTML = `<div class="loader" style="color:#e53e3e">❌ Erro: ${e2.message}<br><small>Verifique se o SQL foi executado no Supabase.</small></div>`;
+      return;
+    }
+
+    // Busca visitas de hoje
+    const hoje = new Date().toISOString().split('T')[0];
+    const { data: visitas } = await supabase.from('visitas').select('loja_id, visitada_em').gte('visitada_em', hoje + 'T00:00:00').lte('visitada_em', hoje + 'T23:59:59');
+
+    const visitaMap = {};
+    (visitas || []).forEach(v => {
+      if (!visitaMap[v.loja_id] || v.visitada_em > visitaMap[v.loja_id]) visitaMap[v.loja_id] = v.visitada_em;
+    });
+
+    data = (lojas || []).map(l => ({
+      ...l,
+      visitada_hoje: !!visitaMap[l.id],
+      ultima_visita: visitaMap[l.id] || null,
+      total_visitas_hoje: visitaMap[l.id] ? 1 : 0
+    }));
+  }
+
   todasLojas = data || [];
   renderLojas();
   renderZonas();
