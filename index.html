@@ -676,12 +676,10 @@ async function carregarHistorico() {
 // ══════════════════════════════════════════
 const GOOGLE_API_KEY = 'AIzaSyAjW7kptv1C6T46O84lcRDUNqEryO9viRE';
 
-async function geocodificarEndereco(logradouro, numero, bairro, cep) {
-  // Tenta com endereço completo
-  const endCompleto = `${logradouro} ${numero}, ${bairro}, São Paulo, SP, Brasil`;
+async function googleGeocode(query) {
   try {
     const r = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endCompleto)}&key=${GOOGLE_API_KEY}`
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}&region=br&language=pt-BR`
     );
     const d = await r.json();
     if (d.status === 'OK' && d.results?.[0]) {
@@ -689,20 +687,27 @@ async function geocodificarEndereco(logradouro, numero, bairro, cep) {
       return { lat: loc.lat, lon: loc.lng };
     }
   } catch(e) {}
+  return null;
+}
 
-  // Fallback: só CEP
+async function geocodificarEndereco(logradouro, numero, bairro, cep) {
+  // Tentativa 1: endereço completo
+  let result = await googleGeocode(`${logradouro} ${numero}, ${bairro}, São Paulo, SP, Brasil`);
+  if (result) return result;
+
+  // Tentativa 2: sem número (pode estar errado na planilha)
+  result = await googleGeocode(`${logradouro}, ${bairro}, São Paulo, SP, Brasil`);
+  if (result) return result;
+
+  // Tentativa 3: só rua + cidade (ignora bairro com grafia estranha)
+  result = await googleGeocode(`${logradouro} ${numero}, São Paulo, Brasil`);
+  if (result) return result;
+
+  // Tentativa 4: só CEP
   if (cep) {
     const cepLimpo = cep.replace(/\D/g,'');
-    try {
-      const r2 = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${cepLimpo},Brasil&key=${GOOGLE_API_KEY}`
-      );
-      const d2 = await r2.json();
-      if (d2.status === 'OK' && d2.results?.[0]) {
-        const loc = d2.results[0].geometry.location;
-        return { lat: loc.lat, lon: loc.lng };
-      }
-    } catch(e) {}
+    result = await googleGeocode(`CEP ${cepLimpo}, Brasil`);
+    if (result) return result;
   }
 
   return null;
@@ -731,7 +736,7 @@ async function geocodificarPendentes() {
       ok++;
     } else { fail++; }
 
-    await new Promise(r => setTimeout(r, 200)); // pausa leve
+    await new Promise(r => setTimeout(r, 150)); // pausa leve entre requisições
   }
 
   prog.style.display = 'none';
