@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visitas de Lojas</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface2: #f0f7f4;
+      --border: #c8e6d8;
+      --navy: #0d2d4f;
+      --navy-soft: rgba(13,45,79,0.07);
+      --green: #3cb87a;
+      --green-light: #6dd49e;
+      --green-soft: rgba(60,184,122,0.12);
+      --green-pale: #e8f7ef;
+      --orange: #f59e0b;
+      --orange-soft: rgba(245,158,11,0.1);
+      --red: #e53e3e;
+      --text: #0d2d4f;
+      --text-dim: #6b8fa8;
+      --radius: 12px;
+      --font: 'Poppins', system-ui, sans-serif;
+      --shadow: 0 2px 12px rgba(13,45,79,0.08);
+      --shadow-md: 0 4px 20px rgba(13,45,79,0.12);
+    }
+
+    body {
+      font-family: var(--font);
+      background: #f5fbf8;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--navy);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 58px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(13,45,79,0.18);
+    }
+    nav .logo {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--green-light);
+      margin-right: auto;
+      letter-spacing: -0.01em;
+    }
+    nav .logo span { color: #fff; font-weight: 400; }
+    nav button {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.6);
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    nav button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    nav button.active { background: var(--green); color: #fff; }
+
+    /* ── PAGES ── */
+    .page { display: none; padding: 20px; max-width: 700px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    /* ── STATS ROW ── */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .stat .num { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+    .stat .lbl { font-size: 0.68rem; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+    .stat.green { border-top: 3px solid var(--green); }
+    .stat.green .num { color: var(--green); }
+    .stat.orange { border-top: 3px solid var(--orange); }
+    .stat.orange .num { color: var(--orange); }
+    .stat.blue { border-top: 3px solid var(--navy); }
+    .stat.blue .num { color: var(--navy); }
+
+    /* ── LOJA ITEM ── */
+    .loja-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all .15s;
+      box-shadow: var(--shadow);
+    }
+    .loja-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .loja-item.visitada {
+      border-color: var(--green);
+      border-left: 4px solid var(--green);
+      background: linear-gradient(135deg, #fff, var(--green-pale));
+    }
+    .loja-dot {
+      width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0;
+      background: #d1e8dd; border: 2px solid var(--border);
+    }
+    .loja-dot.visitada {
+      background: var(--green);
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px var(--green-soft);
+    }
+    .loja-info { flex: 1; min-width: 0; }
+    .loja-nome { font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--navy); }
+    .loja-end { font-size: 0.73rem; color: var(--text-dim); margin-top: 2px; }
+    .loja-badge { font-size: 0.65rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+    .badge-zona { background: var(--navy-soft); color: var(--navy); }
+    .btn-visitar {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    .btn-visitar:hover { background: var(--green); transform: scale(1.03); }
+    .btn-visitar:disabled { background: var(--green); cursor: default; transform: none; opacity: .9; }
+    .hora-visita { font-size: 0.68rem; color: var(--green); margin-top: 3px; font-weight: 500; }
+
+    /* ── SEARCH ── */
+    .search-bar {
+      width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 10px 14px; color: var(--text);
+      font-family: var(--font); font-size: 0.88rem; margin-bottom: 14px;
+      box-shadow: var(--shadow);
+    }
+    .search-bar::placeholder { color: var(--text-dim); }
+    .search-bar:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+
+    /* ── FILTER PILLS ── */
+    .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .pill {
+      background: #fff; border: 1.5px solid var(--border);
+      border-radius: 20px; padding: 4px 13px; font-size: 0.73rem; font-weight: 500;
+      cursor: pointer; color: var(--text-dim); transition: all .15s; font-family: var(--font);
+    }
+    .pill:hover { border-color: var(--green); color: var(--green); }
+    .pill.active { background: var(--green); border-color: var(--green); color: #fff; }
+
+    /* ── PAINEL ── */
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      margin-bottom: 16px;
+      background: var(--surface2);
+    }
+    .upload-area:hover, .upload-area.drag { border-color: var(--green); background: var(--green-pale); }
+    .upload-area .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .upload-area p { color: var(--text-dim); font-size: 0.83rem; margin-top: 4px; }
+    .upload-area strong { color: var(--navy); font-weight: 600; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 18px; border-radius: 8px; font-size: 0.83rem;
+      font-weight: 600; border: none; cursor: pointer; transition: all .15s;
+      font-family: var(--font);
+    }
+    .btn:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-primary { background: var(--green); color: #fff; box-shadow: 0 2px 8px var(--green-soft); }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-outline { background: none; border: 1.5px solid var(--border); color: var(--navy); }
+    .btn-outline:hover { border-color: var(--navy); }
+
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th { background: var(--surface2); padding: 10px 13px; text-align: left; color: var(--navy); font-weight: 600; text-transform: uppercase; font-size: 0.66rem; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+    td { padding: 9px 13px; border-top: 1px solid #edf5f1; color: var(--text); }
+    tr:hover td { background: var(--green-pale); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--navy); border: none;
+      color: #fff; padding: 11px 22px; border-radius: 10px;
+      font-size: 0.83rem; font-weight: 500; z-index: 9999; display: none;
+      box-shadow: 0 8px 32px rgba(13,45,79,0.25); font-family: var(--font);
+    }
+    #toast.show { display: block; animation: slideUp .2s ease; }
+    #toast.success { background: var(--green); }
+    #toast.error { background: var(--red); }
+    @keyframes slideUp { from { transform: translateX(-50%) translateY(10px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }
+
+    /* ── LOADER ── */
+    .loader { text-align: center; padding: 40px; color: var(--text-dim); font-size: 0.85rem; }
+
+    /* ── INPUT DATE ── */
+    input[type=date] {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; color: var(--text);
+      font-family: var(--font); font-size: 0.85rem; flex: 1;
+    }
+    input[type=date]:focus { outline: none; border-color: var(--green); }
+
+    label { display: block; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+    input[type=text], input[type=password] {
+      width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; color: var(--text);
+      font-family: var(--font); font-size: 0.85rem; margin-bottom: 12px;
+    }
+    input:focus { outline: none; border-color: var(--green); }
+
+    /* MOBILE */
+    @media (max-width: 480px) {
+      .stats { grid-template-columns: repeat(3,1fr); }
+      .stat .num { font-size: 1.4rem; }
+      nav button span { display: none; }
+      .loja-item { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="configScreen" style="display:none"></div>
+
+<!-- Nav -->
+<nav>
+  <span class="logo">📍 Visitas <span>de Lojas</span></span>
+  <button onclick="showPage('visitas')" id="nav-visitas" class="active">🗺️ <span>Rotas</span></button>
+  <button onclick="showPage('historico')" id="nav-historico">📋 <span>Histórico</span></button>
+  <button onclick="showPage('painel')" id="nav-painel">⚙️ <span>Painel</span></button>
+</nav>
+
+<!-- PÁGINA: VISITAS DO DIA -->
+<div class="page active" id="page-visitas">
+  <div class="stats">
+    <div class="stat blue"><div class="num" id="statTotal">—</div><div class="lbl">Total</div></div>
+    <div class="stat green"><div class="num" id="statVisitadas">—</div><div class="lbl">Visitadas</div></div>
+    <div class="stat orange"><div class="num" id="statPendentes">—</div><div class="lbl">Pendentes</div></div>
+  </div>
+
+  <input class="search-bar" type="text" placeholder="🔍 Buscar loja..." oninput="filtrarLojas()" id="searchInput" />
+
+  <div class="pills" id="zonaPills"></div>
+
+  <div id="listaLojas"><div class="loader">Carregando lojas...</div></div>
+</div>
+
+<!-- PÁGINA: HISTÓRICO -->
+<div class="page" id="page-historico">
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;gap:10px;align-items:center">
+      <input type="date" id="dataHistorico" />
+      <button class="btn btn-outline" onclick="carregarHistorico()">Buscar</button>
+    </div>
+  </div>
+  <div id="tabelaHistorico"><div class="loader">Selecione uma data</div></div>
+</div>
+
+<!-- PÁGINA: PAINEL -->
+<div class="page" id="page-painel">
+  <div class="card" style="margin-bottom:16px">
+    <h3 style="margin-bottom:12px;font-size:0.95rem">📤 Importar lista de lojas</h3>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()"
+      ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()">
+      <div class="icon">📂</div>
+      <strong>Clique ou arraste o arquivo aqui</strong>
+      <p>Suporta .xlsx, .xls e .csv</p>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(event)" />
+    <div id="previewImport"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="font-size:0.95rem">🏪 Lojas cadastradas</h3>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="exportarLojas()">⬇ Exportar</button>
+        <button class="btn btn-danger" onclick="limparLojas()" id="btnLimpar">🗑 Limpar tudo</button>
+      </div>
+    </div>
+    <div id="tabelaLojas"><div class="loader">Carregando...</div></div>
+  </div>
+
+  <div class="card" style="margin-top:8px;text-align:center">
+    <button class="btn btn-outline" onclick="reconfigurar()" style="font-size:0.8rem;color:var(--text-dim)">🔧 Reconfigurar Supabase</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── SUPABASE ──
+const SB_URL = 'https://giocnzylrabbiehfigdg.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpb2NuenlscmFiYmllaGZpZ2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2ODc0NTQsImV4cCI6MjA5ODI2MzQ1NH0.j5ZpMgRcYXbTwdMPOfa9cGI47ymENX3qXwN_vbHAIdE';
+let supabase = null;
+
+function initSupabase() {
+  try {
+    supabase = window.supabase.createClient(SB_URL, SB_KEY);
+    document.getElementById('configScreen').style.display = 'none';
+    return true;
+  } catch(e) { return false; }
+}
+
+function reconfigurar() { location.reload(); }
+
+// ── ESTADO ──
+let todasLojas = [];
+let zonaAtiva = 'Todas';
+
+// ── TOAST ──
+function toast(msg, tipo = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + tipo;
+  setTimeout(() => el.className = '', 3000);
+}
+
+// ── NAVEGAÇÃO ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'historico') {
+    const hoje = new Date().toISOString().split('T')[0];
+    document.getElementById('dataHistorico').value = hoje;
+    carregarHistorico();
+  }
+  if (name === 'painel') carregarTabelaLojas();
+}
+
+// ── CARREGAR LOJAS DO DIA ──
+async function carregarLojas() {
+  const { data, error } = await supabase.from('visitas_hoje').select('*').order('zona').order('nome_loja');
+  if (error) return toast('Erro ao carregar lojas: ' + error.message, 'error');
+  todasLojas = data || [];
+  renderLojas();
+  renderZonas();
+  atualizarStats();
+}
+
+function renderZonas() {
+  const zonas = ['Todas', ...new Set(todasLojas.map(l => l.zona).filter(Boolean))];
+  const el = document.getElementById('zonaPills');
+  el.innerHTML = zonas.map(z =>
+    `<span class="pill ${zonaAtiva===z?'active':''}" onclick="filtrarZona('${z}')">${z}</span>`
+  ).join('');
+}
+
+function filtrarZona(zona) {
+  zonaAtiva = zona;
+  renderZonas();
+  renderLojas();
+}
+
+function filtrarLojas() { renderLojas(); }
+
+function renderLojas() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtradas = todasLojas.filter(l => {
+    const matchZona = zonaAtiva === 'Todas' || l.zona === zonaAtiva;
+    const matchSearch = !q || l.nome_loja?.toLowerCase().includes(q) || l.bairro?.toLowerCase().includes(q);
+    return matchZona && matchSearch;
+  });
+
+  if (!filtradas.length) {
+    document.getElementById('listaLojas').innerHTML = '<div class="loader">Nenhuma loja encontrada</div>';
+    return;
+  }
+
+  document.getElementById('listaLojas').innerHTML = filtradas.map(l => {
+    const hora = l.ultima_visita ? new Date(l.ultima_visita).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : null;
+    return `
+    <div class="loja-item ${l.visitada_hoje ? 'visitada' : ''}" id="item-${l.id}">
+      <div class="loja-dot ${l.visitada_hoje ? 'visitada' : ''}"></div>
+      <div class="loja-info">
+        <div class="loja-nome">${l.nome_loja}</div>
+        <div class="loja-end">${l.logradouro || ''} ${l.numero || ''} · ${l.bairro || ''} · ${l.cep || ''}</div>
+        ${hora ? `<div class="hora-visita">✓ Visitada às ${hora}</div>` : ''}
+      </div>
+      <span class="loja-badge badge-zona">${l.zona || '?'}</span>
+      <button class="btn-visitar" ${l.visitada_hoje ? 'disabled' : ''} onclick="marcarVisita('${l.id}', this)">
+        ${l.visitada_hoje ? '✓ Ok' : '📍 Marcar'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function atualizarStats() {
+  const total = todasLojas.length;
+  const visitadas = todasLojas.filter(l => l.visitada_hoje).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statVisitadas').textContent = visitadas;
+  document.getElementById('statPendentes').textContent = total - visitadas;
+}
+
+// ── MARCAR VISITA ──
+async function marcarVisita(lojaId, btn) {
+  btn.disabled = true;
+  btn.textContent = '📡...';
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude, longitude, accuracy } = pos.coords;
+
+    const { error } = await supabase.from('visitas').insert({
+      loja_id: lojaId,
+      latitude_visita: latitude,
+      longitude_visita: longitude,
+      distancia_metros: accuracy
+    });
+
+    if (error) {
+      toast('Erro ao salvar: ' + error.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '📍 Marcar';
+      return;
+    }
+
+    // Atualiza o item visualmente
+    const loja = todasLojas.find(l => l.id === lojaId);
+    if (loja) {
+      loja.visitada_hoje = true;
+      loja.ultima_visita = new Date().toISOString();
+    }
+
+    const item = document.getElementById('item-' + lojaId);
+    if (item) {
+      item.classList.add('visitada');
+      item.querySelector('.loja-dot').classList.add('visitada');
+      btn.textContent = '✓ Ok';
+      const hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      const endEl = item.querySelector('.loja-end');
+      if (endEl && !item.querySelector('.hora-visita')) {
+        endEl.insertAdjacentHTML('afterend', `<div class="hora-visita">✓ Visitada às ${hora}</div>`);
+      }
+    }
+
+    atualizarStats();
+    toast('Visita registrada! 📍', 'success');
+
+  }, err => {
+    btn.disabled = false;
+    btn.textContent = '📍 Marcar';
+    toast('Ative a localização do celular', 'error');
+  }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
+// ── HISTÓRICO ──
+async function carregarHistorico() {
+  const data = document.getElementById('dataHistorico').value;
+  if (!data) return;
+
+  const inicio = data + 'T00:00:00';
+  const fim    = data + 'T23:59:59';
+
+  const { data: rows, error } = await supabase
+    .from('visitas')
+    .select('*, lojas(nome_loja, bairro, zona)')
+    .gte('visitada_em', inicio)
+    .lte('visitada_em', fim)
+    .order('visitada_em', { ascending: false });
+
+  if (error) return toast('Erro: ' + error.message, 'error');
+
+  if (!rows?.length) {
+    document.getElementById('tabelaHistorico').innerHTML = '<div class="loader">Nenhuma visita neste dia</div>';
+    return;
+  }
+
+  document.getElementById('tabelaHistorico').innerHTML = `
+    <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:10px">${rows.length} visita(s) em ${new Date(data+'T12:00:00').toLocaleDateString('pt-BR')}</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Loja</th><th>Bairro</th><th>Zona</th><th>Horário</th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+          <tr>
+            <td>${r.lojas?.nome_loja || '—'}</td>
+            <td>${r.lojas?.bairro || '—'}</td>
+            <td>${r.lojas?.zona || '—'}</td>
+            <td>${new Date(r.visitada_em).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── PAINEL: UPLOAD ──
+function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadArea').classList.add('drag'); }
+function handleDragLeave() { document.getElementById('uploadArea').classList.remove('drag'); }
+function handleDrop(e) { e.preventDefault(); handleDragLeave(); const f = e.dataTransfer.files[0]; if (f) processarArquivo(f); }
+function handleFile(e) { const f = e.target.files[0]; if (f) processarArquivo(f); }
+
+function processarArquivo(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, { type: 'binary' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+    // Mapear colunas flexivelmente
+    const lojas = rows.map(r => {
+      const k = key => Object.keys(r).find(c => c.toLowerCase().replace(/[^a-z]/g,'').includes(key)) || '';
+      return {
+        dn: String(r[k('dn')] || r['DN'] || '').trim(),
+        cnpj: String(r[k('cnpj')] || '').trim(),
+        nome_loja: String(r[k('nome')] || r['NOME DA LOJA'] || '').trim(),
+        gcm: String(r[k('gcm')] || '').trim(),
+        logradouro: String(r[k('logr')] || r['GCM'] || r['NOME'] || '').trim(),
+        numero: String(r[k('nmero')] || r['Nº'] || r['N°'] || r['NUMERO'] || '').trim(),
+        bairro: String(r[k('bairro')] || r['BAIRRO'] || '').trim(),
+        cep: String(r[k('cep')] || r['CEP'] || '').trim(),
+        zona: String(r[k('zona')] || r['ZONA'] || '').trim(),
+      };
+    }).filter(l => l.nome_loja);
+
+    if (!lojas.length) return toast('Nenhuma loja encontrada no arquivo', 'error');
+
+    document.getElementById('previewImport').innerHTML = `
+      <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px;font-size:0.82rem">
+        <strong>${lojas.length} lojas encontradas</strong>
+        <div style="color:var(--text-dim);margin-top:4px">Exemplo: ${lojas[0].nome_loja} · ${lojas[0].bairro}</div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary" onclick="importarLojas(window._lojasImport)">⬆ Importar</button>
+          <button class="btn btn-outline" onclick="document.getElementById('previewImport').innerHTML=''">Cancelar</button>
+        </div>
+      </div>`;
+    window._lojasImport = lojas;
+  };
+  reader.readAsBinaryString(file);
+}
+
+async function importarLojas(lojas) {
+  toast('Importando...', '');
+  const { error } = await supabase.from('lojas').insert(lojas);
+  if (error) return toast('Erro: ' + error.message, 'error');
+  document.getElementById('previewImport').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+  toast(`${lojas.length} lojas importadas!`, 'success');
+  carregarTabelaLojas();
+  carregarLojas();
+}
+
+async function carregarTabelaLojas() {
+  const { data, error } = await supabase.from('lojas').select('*').eq('ativa', true).order('nome_loja');
+  if (error) return toast('Erro: ' + error.message, 'error');
+  if (!data?.length) {
+    document.getElementById('tabelaLojas').innerHTML = '<div class="loader">Nenhuma loja cadastrada</div>';
+    return;
+  }
+  document.getElementById('tabelaLojas').innerHTML = `
+    <p style="font-size:0.78rem;color:var(--text-dim);margin-bottom:10px">${data.length} lojas</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>DN</th><th>Nome</th><th>Bairro</th><th>Zona</th></tr></thead>
+        <tbody>
+          ${data.map(l => `<tr><td>${l.dn}</td><td>${l.nome_loja}</td><td>${l.bairro}</td><td>${l.zona}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function limparLojas() {
+  if (!confirm('Apagar TODAS as lojas e visitas? Esta ação não pode ser desfeita.')) return;
+  await supabase.from('visitas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await supabase.from('lojas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  toast('Dados apagados', 'success');
+  carregarTabelaLojas();
+  carregarLojas();
+}
+
+async function exportarLojas() {
+  const { data } = await supabase.from('lojas').select('*').eq('ativa', true);
+  if (!data?.length) return toast('Sem dados para exportar', 'error');
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Lojas');
+  XLSX.writeFile(wb, 'lojas_exportadas.xlsx');
+}
+
+// ── INIT ──
+function iniciar() {
+  carregarLojas();
+  // Atualiza a cada 60s
+  setInterval(carregarLojas, 60000);
+  // Seta data de hoje no histórico
+  document.getElementById('dataHistorico').value = new Date().toISOString().split('T')[0];
+}
+
+window.addEventListener('load', () => {
+  initSupabase();
+  iniciar();
+});
+</script>
+</body>
+</html>
