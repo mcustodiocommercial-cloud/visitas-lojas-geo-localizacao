@@ -731,7 +731,7 @@ async function geocodificarPendentes() {
       ok++;
     } else { fail++; }
 
-    await new Promise(r => setTimeout(r, 200)); // pausa leve entre requisições
+    await new Promise(r => setTimeout(r, 200)); // pausa leve
   }
 
   prog.style.display = 'none';
@@ -756,7 +756,7 @@ function processarArquivo(file) {
     const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
     // Mapeamento exato das colunas da planilha:
-    // DN | CNPJ | NOME DA LOJA | GCM (responsável) | NOME (logradouro) | Nº | BAIRRO | CEP | ZONA
+    // dn | cnpj | nome_loja | gcm | coordenador | logradouro | numero | bairro | cep | zona
     const col = (row, ...chaves) => {
       const k = Object.keys(row).find(c =>
         chaves.some(ch => c.trim().toLowerCase() === ch.toLowerCase())
@@ -767,15 +767,16 @@ function processarArquivo(file) {
     };
 
     const dados = rows.map(r => ({
-      dn:         col(r, 'DN'),
-      cnpj:       col(r, 'CNPJ'),
-      nome_loja:  col(r, 'NOME DA LOJA', 'NOMELOJA', 'NOME_LOJA'),
-      gcm:        col(r, 'GCM'),
-      logradouro: col(r, 'NOME'),      // coluna NOME = logradouro na planilha
-      numero:     col(r, 'Nº', 'N°', 'NUMERO', 'NUM'),
-      bairro:     col(r, 'BAIRRO'),
-      cep:        col(r, 'CEP'),
-      zona:       col(r, 'ZONA'),
+      dn:               col(r, 'dn', 'DN'),
+      cnpj:             col(r, 'cnpj', 'CNPJ'),
+      nome_loja:        col(r, 'nome_loja', 'NOME DA LOJA', 'NOMELOJA', 'NOME_LOJA'),
+      gcm:              col(r, 'gcm', 'GCM'),
+      nome_responsavel: col(r, 'coordenador', 'COORDENADOR', 'nome_responsavel', 'RESPONSAVEL'),
+      logradouro:       col(r, 'logradouro', 'LOGRADOURO', 'NOME'),
+      numero:           col(r, 'numero', 'NUMERO', 'Nº', 'N°', 'NUM'),
+      bairro:           col(r, 'bairro', 'BAIRRO'),
+      cep:              col(r, 'cep', 'CEP'),
+      zona:             col(r, 'zona', 'ZONA'),
     })).filter(l => l.nome_loja);
 
     if (!dados.length) return toast('Nenhuma loja encontrada', 'err');
@@ -784,7 +785,7 @@ function processarArquivo(file) {
       <div style="margin-top:12px;padding:14px;background:var(--surface2);border-radius:10px;font-size:0.82rem">
         <strong>${dados.length} lojas encontradas</strong>
         <div style="color:var(--dim);margin-top:4px">Ex: ${dados[0].nome_loja} · ${dados[0].bairro}</div>
-        <div style="color:var(--dim);margin-top:4px;font-size:0.75rem">📡 Os endereços serão geocodificados via Google Maps após a importação</div>
+        <div style="color:var(--dim);margin-top:4px;font-size:0.75rem">📡 Os endereços serão geocodificados automaticamente após a importação</div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="importar(window._imp)">⬆ Importar + Geocodificar</button>
           <button class="btn btn-outline" onclick="document.getElementById('preview').innerHTML=''">Cancelar</button>
