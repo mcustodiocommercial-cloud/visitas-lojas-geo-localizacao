@@ -47,17 +47,25 @@
     nav button:hover { background: rgba(255,255,255,0.1); color: #fff; }
     nav button.active { background: var(--green); color: #fff; }
 
+    /* GPS STATUS BAR */
+    #gpsBar {
+      background: var(--navy); color: rgba(255,255,255,0.7);
+      font-size: 0.72rem; text-align: center; padding: 5px 12px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    #gpsDot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0; }
+    #gpsDot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+    #gpsDot.err { background: var(--red); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
     /* PAGES */
     .page { display: none; padding: 16px; max-width: 700px; margin: 0 auto; }
     .page.active { display: block; }
 
     /* STATS */
     .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
-    .stat {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px 10px; text-align: center;
-      box-shadow: var(--shadow);
-    }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 10px; text-align: center; box-shadow: var(--shadow); }
     .stat.blue  { border-top: 3px solid var(--navy); }
     .stat.green { border-top: 3px solid var(--green); }
     .stat.ora   { border-top: 3px solid var(--orange); }
@@ -71,8 +79,7 @@
     .search-bar {
       width: 100%; background: var(--surface); border: 1.5px solid var(--border);
       border-radius: var(--radius); padding: 10px 14px; color: var(--text);
-      font-family: var(--font); font-size: 0.88rem; margin-bottom: 12px;
-      box-shadow: var(--shadow);
+      font-family: var(--font); font-size: 0.88rem; margin-bottom: 12px; box-shadow: var(--shadow);
     }
     .search-bar::placeholder { color: var(--dim); }
     .search-bar:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
@@ -92,15 +99,19 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 13px 15px; margin-bottom: 9px;
       display: flex; align-items: center; gap: 12px;
-      transition: all .15s; box-shadow: var(--shadow);
+      transition: all .2s; box-shadow: var(--shadow);
     }
     .loja-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
     .loja-item.visitada { border-color: var(--green); border-left: 4px solid var(--green); background: linear-gradient(135deg,#fff,var(--green-pale)); }
+    .loja-item.proxima  { border-color: var(--orange); border-left: 4px solid var(--orange); background: linear-gradient(135deg,#fff,#fffbf0); animation: glow .8s ease-in-out infinite alternate; }
+    @keyframes glow { from { box-shadow: var(--shadow); } to { box-shadow: 0 0 18px rgba(245,158,11,0.35); } }
     .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: #d1e8dd; border: 2px solid var(--border); }
-    .dot.ok { background: var(--green); border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+    .dot.ok   { background: var(--green); border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+    .dot.near { background: var(--orange); border-color: var(--orange); animation: pulse 1s infinite; }
     .loja-info { flex: 1; min-width: 0; }
     .loja-nome { font-weight: 600; font-size: 0.87rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--navy); }
     .loja-end  { font-size: 0.72rem; color: var(--dim); margin-top: 2px; }
+    .loja-dist { font-size: 0.68rem; color: var(--orange); margin-top: 2px; font-weight: 600; }
     .hora-ok   { font-size: 0.68rem; color: var(--green); margin-top: 2px; font-weight: 500; }
     .badge { font-size: 0.63rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; background: rgba(13,45,79,0.07); color: var(--navy); }
     .btn-marcar {
@@ -111,6 +122,26 @@
     }
     .btn-marcar:hover { background: var(--green); }
     .btn-marcar:disabled { background: var(--green); cursor: default; opacity: .9; }
+
+    /* AUTO BADGE */
+    .auto-badge {
+      background: var(--green-soft); color: var(--green);
+      font-size: 0.62rem; font-weight: 700; padding: 2px 7px;
+      border-radius: 10px; margin-left: 6px; vertical-align: middle;
+    }
+
+    /* NOTIFICAÇÃO FLUTUANTE */
+    #notif {
+      position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+      background: var(--navy); color: #fff;
+      padding: 14px 20px; border-radius: 14px;
+      font-size: 0.88rem; font-weight: 600; z-index: 9999;
+      box-shadow: 0 8px 32px rgba(13,45,79,0.35);
+      display: none; max-width: 90vw; text-align: center;
+      border-left: 5px solid var(--green);
+    }
+    #notif.show { display: block; animation: dropIn .3s ease; }
+    @keyframes dropIn { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
 
     /* CARD */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 12px; box-shadow: var(--shadow); }
@@ -138,6 +169,15 @@
     .btn-danger  { background: var(--red); color: #fff; }
     .btn-outline { background: none; border: 1.5px solid var(--border); color: var(--navy); }
 
+    /* PROGRESS GEOCODE */
+    #geoProgress {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px; margin-top: 10px; display: none;
+    }
+    .prog-bar-wrap { background: #e0ede8; border-radius: 20px; height: 8px; margin: 8px 0; overflow: hidden; }
+    .prog-bar      { background: var(--green); height: 100%; border-radius: 20px; transition: width .3s; }
+    #geoStatus { font-size: 0.78rem; color: var(--dim); }
+
     /* TABLE */
     .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: 0.79rem; }
@@ -146,42 +186,36 @@
     tr:hover td { background: var(--green-pale); }
 
     /* INPUTS */
-    input[type=date], input[type=text], input[type=password] {
-      background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: 8px; padding: 8px 12px; color: var(--text);
-      font-family: var(--font); font-size: 0.85rem;
-    }
-    input[type=date] { flex: 1; }
+    input[type=date] { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: var(--font); font-size: 0.85rem; flex: 1; }
     input:focus { outline: none; border-color: var(--green); }
-    label { display: block; font-size: 0.78rem; color: var(--dim); margin-bottom: 4px; font-weight: 500; }
 
     /* TOAST */
     #toast {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       background: var(--navy); color: #fff; padding: 10px 20px;
       border-radius: 10px; font-size: 0.82rem; font-weight: 500;
-      z-index: 9999; display: none; box-shadow: 0 6px 24px rgba(13,45,79,0.25);
+      z-index: 9998; display: none; box-shadow: 0 6px 24px rgba(13,45,79,0.25);
       font-family: var(--font); white-space: nowrap;
     }
     #toast.show { display: block; animation: up .2s ease; }
     #toast.ok  { background: var(--green); }
     #toast.err { background: var(--red); }
-    @keyframes up { from { transform:translateX(-50%) translateY(8px); opacity:0; } to { transform:translateX(-50%) translateY(0); opacity:1; } }
+    @keyframes up { from{transform:translateX(-50%) translateY(8px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
 
-    /* LOADER / MSG */
     .msg { text-align: center; padding: 36px 20px; color: var(--dim); font-size: 0.85rem; }
     .msg.err { color: var(--red); }
 
-    /* DIAGNÓSTICO */
-    #diagBox {
-      background: #fff8f0; border: 1.5px solid #f59e0b;
-      border-radius: var(--radius); padding: 16px; margin-bottom: 16px;
-      font-size: 0.82rem; line-height: 1.6; display: none;
-    }
-    #diagBox strong { color: var(--navy); }
-    #diagBox code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+    /* CONFIG GPS */
+    .gps-config { display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; font-size: 0.82rem; }
+    .gps-config label { color: var(--dim); margin: 0; font-weight: 400; }
+    .gps-config strong { color: var(--navy); }
+    .toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: #cdd8e0; border-radius: 24px; cursor: pointer; transition: .3s; }
+    .slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.3s; }
+    input:checked + .slider { background: var(--green); }
+    input:checked + .slider:before { transform: translateX(18px); }
 
-    /* MOBILE */
     @media (max-width: 480px) {
       .stat .num { font-size: 1.4rem; }
       nav button span { display: none; }
@@ -192,22 +226,43 @@
 
 <nav>
   <span class="logo">📍 Visitas <em>de Lojas</em></span>
-  <button onclick="showPage('rotas')"    id="nav-rotas"    class="active">🗺️ <span>Rotas</span></button>
+  <button onclick="showPage('rotas')"     id="nav-rotas"     class="active">🗺️ <span>Rotas</span></button>
   <button onclick="showPage('historico')" id="nav-historico">📋 <span>Histórico</span></button>
-  <button onclick="showPage('painel')"   id="nav-painel">⚙️ <span>Painel</span></button>
+  <button onclick="showPage('painel')"    id="nav-painel">⚙️ <span>Painel</span></button>
 </nav>
+
+<!-- BARRA GPS -->
+<div id="gpsBar">
+  <div id="gpsDot"></div>
+  <span id="gpsTxt">GPS desligado — ative o rastreamento</span>
+</div>
+
+<!-- NOTIFICAÇÃO FLUTUANTE -->
+<div id="notif"></div>
 
 <!-- ROTAS -->
 <div class="page active" id="page-rotas">
-  <div id="diagBox"></div>
+
+  <div class="gps-config">
+    <label class="toggle">
+      <input type="checkbox" id="toggleGPS" onchange="toggleRastreamento(this.checked)">
+      <span class="slider"></span>
+    </label>
+    <div>
+      <strong>Rastreamento automático</strong>
+      <div style="color:var(--dim);font-size:0.72rem">Marca a loja ao chegar a 50m · como o Strava</div>
+    </div>
+  </div>
+
   <div class="stats">
     <div class="stat blue"><div class="num" id="sTotal">—</div><div class="lbl">Total</div></div>
     <div class="stat green"><div class="num" id="sVisit">—</div><div class="lbl">Visitadas</div></div>
     <div class="stat ora"><div class="num" id="sPend">—</div><div class="lbl">Pendentes</div></div>
   </div>
+
   <input class="search-bar" type="text" placeholder="🔍 Buscar loja ou bairro..." oninput="filtrar()" id="busca" />
   <div class="pills" id="pills"></div>
-  <div id="lista"><div class="msg">Conectando ao banco de dados...</div></div>
+  <div id="lista"><div class="msg">Conectando...</div></div>
 </div>
 
 <!-- HISTÓRICO -->
@@ -229,9 +284,17 @@
       ondrop="onDrop(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave()">
       <div class="icon">📂</div>
       <strong>Clique ou arraste o arquivo aqui</strong>
-      <p>Aceita .xlsx, .xls e .csv</p>
+      <p>Aceita .xlsx, .xls e .csv · Geocodificação automática via OpenStreetMap</p>
     </div>
     <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
+
+    <!-- Barra de progresso geocode -->
+    <div id="geoProgress">
+      <div id="geoStatus">Geocodificando endereços...</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+      <div id="geoDetalhe" style="font-size:0.72rem;color:var(--dim)"></div>
+    </div>
+
     <div id="preview"></div>
   </div>
 
@@ -239,6 +302,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <h3 style="margin:0">🏪 Lojas cadastradas</h3>
       <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="geocodificarPendentes()" title="Geocodificar lojas sem coordenadas">📡 Geocodificar</button>
         <button class="btn btn-outline" onclick="exportar()">⬇ Exportar</button>
         <button class="btn btn-danger"  onclick="limpar()">🗑 Limpar</button>
       </div>
@@ -250,16 +314,56 @@
 <div id="toast"></div>
 
 <script>
-// ── CONFIG ──
-const SB_URL = 'https://giocnzylrabbiehfigdg.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpb2NuenlscmFiYmllaGZpZ2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2ODc0NTQsImV4cCI6MjA5ODI2MzQ1NH0.j5ZpMgRcYXbTwdMPOfa9cGI47ymENX3qXwN_vbHAIdE';
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+const SB_URL   = 'https://giocnzylrabbiehfigdg.supabase.co';
+const SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpb2NuenlscmFiYmllaGZpZ2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2ODc0NTQsImV4cCI6MjA5ODI2MzQ1NH0.j5ZpMgRcYXbTwdMPOfa9cGI47ymENX3qXwN_vbHAIdE';
+const RAIO_M   = 50;      // metros para marcar automaticamente
+const COOLDOWN = 300000;  // 5 min entre marcações da mesma loja
 
+// ══════════════════════════════════════════
+//  ESTADO
+// ══════════════════════════════════════════
 let sb, lojas = [], zonaAtiva = 'Todas';
+let watchId = null, posAtual = null;
+const marcadas = new Set(); // IDs já marcados nesta sessão (evita duplo)
+const ultimaMarcacao = {};  // loja_id → timestamp
 
+// ══════════════════════════════════════════
+//  UTILITÁRIOS
+// ══════════════════════════════════════════
 function toast(msg, tipo='') {
   const el = document.getElementById('toast');
   el.textContent = msg; el.className = 'show ' + tipo;
-  setTimeout(() => el.className = '', 3000);
+  setTimeout(() => el.className = '', 3200);
+}
+
+function notificar(nome, distancia) {
+  const el = document.getElementById('notif');
+  el.innerHTML = `✅ <strong>${nome}</strong><br><small>Visita registrada automaticamente · ${Math.round(distancia)}m</small>`;
+  el.className = 'show';
+  setTimeout(() => el.className = '', 4000);
+
+  // Som de notificação (beep via AudioContext)
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 150].forEach(delay => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.3, ctx.currentTime + delay/1000);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.3);
+      o.start(ctx.currentTime + delay/1000);
+      o.stop(ctx.currentTime + delay/1000 + 0.3);
+    });
+  } catch(e) {}
+
+  // Notificação nativa do browser se permitida
+  if (Notification.permission === 'granted') {
+    new Notification('📍 Visita registrada!', { body: nome, icon: '' });
+  }
 }
 
 function showPage(name) {
@@ -267,86 +371,216 @@ function showPage(name) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.getElementById('nav-' + name).classList.add('active');
-  if (name === 'historico') {
-    document.getElementById('dtHistorico').value = hoje();
-    carregarHistorico();
-  }
-  if (name === 'painel') carregarTabelaLojas();
+  if (name === 'historico') { document.getElementById('dtHistorico').value = hoje(); carregarHistorico(); }
+  if (name === 'painel')    carregarTabelaLojas();
 }
 
 function hoje() { return new Date().toISOString().split('T')[0]; }
 
-// ── DIAGNÓSTICO ──
-function mostrarDiag(erros) {
-  const box = document.getElementById('diagBox');
-  box.style.display = 'block';
-  box.innerHTML = `
-    <strong>⚠️ Problema detectado — siga os passos abaixo:</strong><br><br>
-    ${erros.map((e,i) => `<b>${i+1}.</b> ${e}`).join('<br>')}
-    <br><br>
-    <b>Como corrigir:</b> Acesse <a href="https://app.supabase.com" target="_blank" style="color:var(--green)">app.supabase.com</a>
-    → seu projeto → <b>SQL Editor</b> → cole e execute o arquivo <code>supabase_schema.sql</code> que está no seu repositório GitHub.
-  `;
+// ══════════════════════════════════════════
+//  DISTÂNCIA (Haversine)
+// ══════════════════════════════════════════
+function distancia(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// ── INIT ──
-async function init() {
-  try {
-    sb = window.supabase.createClient(SB_URL, SB_KEY);
-  } catch(e) {
-    document.getElementById('lista').innerHTML = `<div class="msg err">❌ Erro ao inicializar Supabase: ${e.message}</div>`;
+// ══════════════════════════════════════════
+//  RASTREAMENTO GPS
+// ══════════════════════════════════════════
+function toggleRastreamento(ativo) {
+  if (ativo) iniciarGPS();
+  else pararGPS();
+}
+
+function iniciarGPS() {
+  if (!navigator.geolocation) {
+    toast('Geolocalização não suportada', 'err');
+    document.getElementById('toggleGPS').checked = false;
     return;
   }
 
-  // Testa conexão com tabela lojas
-  const { data: testLojas, error: errLojas } = await sb.from('lojas').select('id').limit(1);
+  // Pede permissão de notificação
+  if (Notification.permission === 'default') Notification.requestPermission();
 
-  if (errLojas) {
-    const erros = [];
-    if (errLojas.message.includes('relation') || errLojas.code === '42P01') {
-      erros.push('A tabela <code>lojas</code> não existe no Supabase.');
-      erros.push('A tabela <code>visitas</code> provavelmente também não existe.');
-    } else if (errLojas.message.includes('JWT') || errLojas.code === 'PGRST301') {
-      erros.push('Chave de API inválida ou expirada.');
-    } else {
-      erros.push(`Erro de conexão: <code>${errLojas.message}</code>`);
+  setGpsStatus('buscando', '📡 Buscando sinal GPS...');
+
+  watchId = navigator.geolocation.watchPosition(
+    pos => onPosicao(pos),
+    err => {
+      setGpsStatus('err', '❌ Erro de GPS — verifique permissões');
+      console.error('GPS erro:', err);
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+  );
+}
+
+function pararGPS() {
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  posAtual = null;
+  setGpsStatus('off', 'GPS desligado — ative o rastreamento');
+  // Remove destaques de proximidade
+  document.querySelectorAll('.loja-item.proxima').forEach(el => {
+    el.classList.remove('proxima');
+    el.querySelector('.dot')?.classList.remove('near');
+    const d = el.querySelector('.loja-dist');
+    if (d) d.remove();
+  });
+}
+
+function setGpsStatus(estado, txt) {
+  const dot = document.getElementById('gpsDot');
+  const label = document.getElementById('gpsTxt');
+  dot.className = estado === 'ok' ? 'ok' : estado === 'err' ? 'err' : '';
+  label.textContent = txt;
+}
+
+async function onPosicao(pos) {
+  posAtual = pos.coords;
+  const { latitude, longitude, accuracy } = pos.coords;
+  setGpsStatus('ok', `📡 GPS ativo · precisão ${Math.round(accuracy)}m`);
+
+  // Verifica cada loja com coordenadas
+  for (const loja of lojas) {
+    if (loja.visitada_hoje) continue;
+    if (!loja.latitude || !loja.longitude) continue;
+
+    const dist = distancia(latitude, longitude, loja.latitude, loja.longitude);
+
+    // Destaca lojas próximas (< 200m)
+    const itemEl = document.getElementById('it-' + loja.id);
+    if (itemEl) {
+      if (dist < 200 && !loja.visitada_hoje) {
+        itemEl.classList.add('proxima');
+        itemEl.querySelector('.dot')?.classList.add('near');
+        let distEl = itemEl.querySelector('.loja-dist');
+        if (!distEl) {
+          distEl = document.createElement('div');
+          distEl.className = 'loja-dist';
+          itemEl.querySelector('.loja-end')?.insertAdjacentElement('afterend', distEl);
+        }
+        distEl.textContent = `📡 ${Math.round(dist)}m de distância`;
+      } else {
+        itemEl.classList.remove('proxima');
+        itemEl.querySelector('.dot')?.classList.remove('near');
+        const distEl = itemEl.querySelector('.loja-dist');
+        if (distEl) distEl.remove();
+      }
     }
-    mostrarDiag(erros);
-    document.getElementById('lista').innerHTML = `<div class="msg err">❌ Tabelas não encontradas no banco de dados.</div>`;
-    document.getElementById('sTotal').textContent = '!';
-    document.getElementById('sVisit').textContent = '!';
-    document.getElementById('sPend').textContent = '!';
-    return;
+
+    // Marca automaticamente se dentro do raio
+    if (dist <= RAIO_M) {
+      const agora = Date.now();
+      if (marcadas.has(loja.id)) continue;
+      if (ultimaMarcacao[loja.id] && agora - ultimaMarcacao[loja.id] < COOLDOWN) continue;
+
+      marcadas.add(loja.id);
+      ultimaMarcacao[loja.id] = agora;
+      await registrarVisita(loja, latitude, longitude, dist, true);
+    }
+  }
+}
+
+// ══════════════════════════════════════════
+//  REGISTRAR VISITA (auto ou manual)
+// ══════════════════════════════════════════
+async function registrarVisita(loja, lat, lon, dist, automatica = false) {
+  const { error } = await sb.from('visitas').insert({
+    loja_id: loja.id,
+    latitude_visita: lat,
+    longitude_visita: lon,
+    distancia_metros: Math.round(dist),
+    observacao: automatica ? 'automática' : 'manual'
+  });
+
+  if (error) { toast('Erro ao salvar: ' + error.message, 'err'); marcadas.delete(loja.id); return; }
+
+  loja.visitada_hoje = true;
+  loja.ultima_visita = new Date().toISOString();
+
+  const itemEl = document.getElementById('it-' + loja.id);
+  if (itemEl) {
+    itemEl.classList.remove('proxima');
+    itemEl.classList.add('visitada');
+    const dot = itemEl.querySelector('.dot');
+    if (dot) { dot.className = 'dot ok'; }
+    const btn = itemEl.querySelector('.btn-marcar');
+    if (btn) { btn.disabled = true; btn.textContent = '✓ Ok'; }
+    const hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    const distEl = itemEl.querySelector('.loja-dist');
+    if (distEl) distEl.remove();
+    const endEl = itemEl.querySelector('.loja-end');
+    if (endEl && !itemEl.querySelector('.hora-ok')) {
+      endEl.insertAdjacentHTML('afterend', `<div class="hora-ok">✓ Visitada às ${hora}${automatica ? ' · auto' : ''}</div>`);
+    }
   }
 
-  // Tabelas OK — carrega lojas
+  renderStats();
+
+  if (automatica) notificar(loja.nome_loja, dist);
+  else toast('Visita registrada! 📍', 'ok');
+}
+
+// Botão manual
+async function marcar(id, btn) {
+  btn.disabled = true; btn.textContent = '📡...';
+  if (posAtual) {
+    const loja = lojas.find(l => l.id === id);
+    if (loja) {
+      const dist = (loja.latitude && loja.longitude)
+        ? distancia(posAtual.latitude, posAtual.longitude, loja.latitude, loja.longitude)
+        : 0;
+      await registrarVisita(loja, posAtual.latitude, posAtual.longitude, dist, false);
+      return;
+    }
+  }
+  // Sem GPS ativo: pega posição pontual
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const loja = lojas.find(l => l.id === id);
+    if (!loja) return;
+    const dist = (loja.latitude && loja.longitude)
+      ? distancia(pos.coords.latitude, pos.coords.longitude, loja.latitude, loja.longitude)
+      : 0;
+    await registrarVisita(loja, pos.coords.latitude, pos.coords.longitude, dist, false);
+  }, () => {
+    btn.disabled = false; btn.textContent = '📍 Marcar';
+    toast('Ative a localização do celular', 'err');
+  }, { enableHighAccuracy: true, timeout: 10000 });
+}
+
+// ══════════════════════════════════════════
+//  CARREGAR LOJAS
+// ══════════════════════════════════════════
+async function init() {
+  try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {
+    document.getElementById('lista').innerHTML = `<div class="msg err">❌ ${e.message}</div>`; return;
+  }
+  const { error } = await sb.from('lojas').select('id').limit(1);
+  if (error) {
+    document.getElementById('lista').innerHTML = `<div class="msg err">❌ Tabelas não encontradas. Execute o SQL no Supabase.<br><small>${error.message}</small></div>`;
+    return;
+  }
   await carregarLojas();
   document.getElementById('dtHistorico').value = hoje();
   setInterval(carregarLojas, 60000);
 }
 
-// ── CARREGAR LOJAS ──
 async function carregarLojas() {
-  // Tenta view primeiro
   let { data, error } = await sb.from('visitas_hoje').select('*').order('zona').order('nome_loja');
-
   if (error) {
-    // Fallback direto nas tabelas
     const { data: ls, error: e2 } = await sb.from('lojas').select('*').eq('ativa', true).order('zona').order('nome_loja');
     if (e2) { document.getElementById('lista').innerHTML = `<div class="msg err">❌ ${e2.message}</div>`; return; }
-
     const d = hoje();
-    const { data: vs } = await sb.from('visitas').select('loja_id, visitada_em')
-      .gte('visitada_em', d + 'T00:00:00').lte('visitada_em', d + 'T23:59:59');
+    const { data: vs } = await sb.from('visitas').select('loja_id, visitada_em').gte('visitada_em', d+'T00:00:00').lte('visitada_em', d+'T23:59:59');
     const vm = {};
     (vs||[]).forEach(v => { if (!vm[v.loja_id] || v.visitada_em > vm[v.loja_id]) vm[v.loja_id] = v.visitada_em; });
     data = (ls||[]).map(l => ({ ...l, visitada_hoje: !!vm[l.id], ultima_visita: vm[l.id]||null }));
   }
-
   lojas = data || [];
-  renderPills();
-  renderLista();
-  renderStats();
+  renderPills(); renderLista(); renderStats();
 }
 
 function renderStats() {
@@ -367,27 +601,35 @@ function setZona(z) { zonaAtiva = z; renderPills(); renderLista(); }
 function filtrar()  { renderLista(); }
 
 function renderLista() {
-  const q = document.getElementById('busca').value.toLowerCase();
+  const q  = document.getElementById('busca').value.toLowerCase();
   const fl = lojas.filter(l => {
     const mz = zonaAtiva === 'Todas' || l.zona === zonaAtiva;
     const ms = !q || (l.nome_loja||'').toLowerCase().includes(q) || (l.bairro||'').toLowerCase().includes(q);
     return mz && ms;
   });
 
-  if (!fl.length) {
-    document.getElementById('lista').innerHTML = '<div class="msg">Nenhuma loja encontrada</div>';
-    return;
+  if (!fl.length) { document.getElementById('lista').innerHTML = '<div class="msg">Nenhuma loja encontrada</div>'; return; }
+
+  // Ordena: próximas primeiro se GPS ativo
+  if (posAtual) {
+    fl.sort((a, b) => {
+      if (a.visitada_hoje !== b.visitada_hoje) return a.visitada_hoje ? 1 : -1;
+      if (!a.latitude || !b.latitude) return 0;
+      return distancia(posAtual.latitude, posAtual.longitude, a.latitude, a.longitude)
+           - distancia(posAtual.latitude, posAtual.longitude, b.latitude, b.longitude);
+    });
   }
 
   document.getElementById('lista').innerHTML = fl.map(l => {
     const hora = l.ultima_visita
       ? new Date(l.ultima_visita).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
       : null;
+    const temGeo = !!(l.latitude && l.longitude);
     return `
     <div class="loja-item ${l.visitada_hoje?'visitada':''}" id="it-${l.id}">
       <div class="dot ${l.visitada_hoje?'ok':''}"></div>
       <div class="loja-info">
-        <div class="loja-nome">${l.nome_loja}</div>
+        <div class="loja-nome">${l.nome_loja}${temGeo ? '' : ' <span style="font-size:0.6rem;color:var(--orange);font-weight:600">sem GPS</span>'}</div>
         <div class="loja-end">${[l.logradouro, l.numero, l.bairro, l.cep].filter(Boolean).join(' · ')}</div>
         ${hora ? `<div class="hora-ok">✓ Visitada às ${hora}</div>` : ''}
       </div>
@@ -399,67 +641,95 @@ function renderLista() {
   }).join('');
 }
 
-// ── MARCAR VISITA ──
-async function marcar(id, btn) {
-  btn.disabled = true; btn.textContent = '📡...';
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const { latitude, longitude, accuracy } = pos.coords;
-    const { error } = await sb.from('visitas').insert({ loja_id: id, latitude_visita: latitude, longitude_visita: longitude, distancia_metros: accuracy });
-    if (error) { toast('Erro: ' + error.message, 'err'); btn.disabled = false; btn.textContent = '📍 Marcar'; return; }
-
-    const l = lojas.find(x => x.id === id);
-    if (l) { l.visitada_hoje = true; l.ultima_visita = new Date().toISOString(); }
-
-    const el = document.getElementById('it-' + id);
-    if (el) {
-      el.classList.add('visitada');
-      el.querySelector('.dot').classList.add('ok');
-      btn.textContent = '✓ Ok';
-      const hora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      if (!el.querySelector('.hora-ok')) {
-        el.querySelector('.loja-end').insertAdjacentHTML('afterend', `<div class="hora-ok">✓ Visitada às ${hora}</div>`);
-      }
-    }
-    renderStats();
-    toast('Visita registrada! 📍', 'ok');
-  }, () => {
-    btn.disabled = false; btn.textContent = '📍 Marcar';
-    toast('Ative a localização do celular', 'err');
-  }, { enableHighAccuracy: true, timeout: 10000 });
-}
-
-// ── HISTÓRICO ──
+// ══════════════════════════════════════════
+//  HISTÓRICO
+// ══════════════════════════════════════════
 async function carregarHistorico() {
-  const d = document.getElementById('dtHistorico').value;
-  if (!d) return;
+  const d  = document.getElementById('dtHistorico').value;
   const el = document.getElementById('tblHistorico');
+  if (!d) return;
   el.innerHTML = '<div class="msg">Buscando...</div>';
-
   const { data, error } = await sb.from('visitas')
     .select('*, lojas(nome_loja, bairro, zona)')
-    .gte('visitada_em', d + 'T00:00:00')
-    .lte('visitada_em', d + 'T23:59:59')
+    .gte('visitada_em', d+'T00:00:00').lte('visitada_em', d+'T23:59:59')
     .order('visitada_em', { ascending: false });
-
   if (error) { el.innerHTML = `<div class="msg err">❌ ${error.message}</div>`; return; }
   if (!data?.length) { el.innerHTML = '<div class="msg">Nenhuma visita neste dia</div>'; return; }
-
   el.innerHTML = `
-    <p style="font-size:0.78rem;color:var(--dim);margin-bottom:10px">${data.length} visita(s) em ${new Date(d+'T12:00:00').toLocaleDateString('pt-BR')}</p>
+    <p style="font-size:0.78rem;color:var(--dim);margin-bottom:10px">${data.length} visita(s) · ${new Date(d+'T12:00:00').toLocaleDateString('pt-BR')}</p>
     <div class="table-wrap"><table>
-      <thead><tr><th>Loja</th><th>Bairro</th><th>Zona</th><th>Horário</th></tr></thead>
+      <thead><tr><th>Loja</th><th>Bairro</th><th>Zona</th><th>Horário</th><th>Tipo</th></tr></thead>
       <tbody>${data.map(r => `
         <tr>
           <td>${r.lojas?.nome_loja||'—'}</td>
           <td>${r.lojas?.bairro||'—'}</td>
           <td>${r.lojas?.zona||'—'}</td>
           <td>${new Date(r.visitada_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
+          <td>${r.observacao === 'automática' ? '🤖 Auto' : '👆 Manual'}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>`;
 }
 
-// ── PAINEL: UPLOAD ──
+// ══════════════════════════════════════════
+//  GEOCODIFICAÇÃO (OpenStreetMap Nominatim)
+// ══════════════════════════════════════════
+async function geocodificarEndereco(logradouro, numero, bairro, cep) {
+  const q = encodeURIComponent(`${logradouro} ${numero}, ${bairro}, São Paulo, Brazil`);
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'VisitasLojas/1.0' }
+    });
+    const data = await r.json();
+    if (data?.[0]) return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  } catch(e) {}
+  // Fallback: só CEP
+  if (cep) {
+    const cepLimpo = cep.replace(/\D/g,'');
+    try {
+      const r2 = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${cepLimpo}&country=Brazil&format=json&limit=1`);
+      const d2 = await r2.json();
+      if (d2?.[0]) return { lat: parseFloat(d2[0].lat), lon: parseFloat(d2[0].lon) };
+    } catch(e) {}
+  }
+  return null;
+}
+
+async function geocodificarPendentes() {
+  const { data: pendentes } = await sb.from('lojas').select('id, logradouro, numero, bairro, cep').eq('ativa', true).is('latitude', null);
+  if (!pendentes?.length) return toast('Todas as lojas já têm coordenadas! ✅', 'ok');
+
+  const prog = document.getElementById('geoProgress');
+  const bar  = document.getElementById('progBar');
+  const stat = document.getElementById('geoStatus');
+  const det  = document.getElementById('geoDetalhe');
+  prog.style.display = 'block';
+
+  let ok = 0, fail = 0;
+  for (let i = 0; i < pendentes.length; i++) {
+    const l = pendentes[i];
+    stat.textContent = `Geocodificando ${i+1}/${pendentes.length}...`;
+    det.textContent  = `${l.logradouro} ${l.numero}, ${l.bairro}`;
+    bar.style.width  = ((i+1)/pendentes.length*100) + '%';
+
+    const coord = await geocodificarEndereco(l.logradouro, l.numero, l.bairro, l.cep);
+    if (coord) {
+      await sb.from('lojas').update({ latitude: coord.lat, longitude: coord.lon }).eq('id', l.id);
+      ok++;
+    } else { fail++; }
+
+    // Respeita limite do Nominatim: 1 req/s
+    await new Promise(r => setTimeout(r, 1100));
+  }
+
+  prog.style.display = 'none';
+  toast(`Geocodificadas: ${ok} ✅  Sem resultado: ${fail}`, ok > 0 ? 'ok' : 'err');
+  await carregarLojas();
+}
+
+// ══════════════════════════════════════════
+//  UPLOAD + IMPORT
+// ══════════════════════════════════════════
 function onDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag'); }
 function onDragLeave()  { document.getElementById('dropZone').classList.remove('drag'); }
 function onDrop(e)      { e.preventDefault(); onDragLeave(); processarArquivo(e.dataTransfer.files[0]); }
@@ -467,42 +737,43 @@ function onFile(e)      { processarArquivo(e.target.files[0]); }
 
 function processarArquivo(file) {
   if (!file) return;
-  const r = new FileReader();
-  r.onload = e => {
-    const wb  = XLSX.read(e.target.result, { type: 'binary' });
-    const ws  = wb.Sheets[wb.SheetNames[0]];
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb   = XLSX.read(e.target.result, { type: 'binary' });
+    const ws   = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
-    const encontrar = (row, ...termos) => {
-      const k = Object.keys(row).find(c => termos.some(t => c.toLowerCase().replace(/\s/g,'').includes(t)));
+    const achar = (row, ...termos) => {
+      const k = Object.keys(row).find(c => termos.some(t => c.toLowerCase().replace(/[\s_]/g,'').includes(t)));
       return k ? String(row[k]).trim() : '';
     };
 
     const dados = rows.map(r => ({
-      dn:              encontrar(r, 'dn'),
-      cnpj:            encontrar(r, 'cnpj'),
-      nome_loja:       encontrar(r, 'nomeloja', 'nome_loja', 'nome') || encontrar(r, 'loja'),
-      logradouro:      encontrar(r, 'logradouro', 'rua', 'avenida', 'gcm', 'endereco'),
-      numero:          encontrar(r, 'nº', 'numero', 'n°', 'num'),
-      bairro:          encontrar(r, 'bairro'),
-      cep:             encontrar(r, 'cep'),
-      zona:            encontrar(r, 'zona'),
+      dn:        achar(r,'dn'),
+      cnpj:      achar(r,'cnpj'),
+      nome_loja: achar(r,'nomeloja','nome_loja') || achar(r,'nome') || achar(r,'loja'),
+      logradouro:achar(r,'logradouro','rua','avenida','gcm','endereco'),
+      numero:    achar(r,'nº','numero','n°','num'),
+      bairro:    achar(r,'bairro'),
+      cep:       achar(r,'cep'),
+      zona:      achar(r,'zona'),
     })).filter(l => l.nome_loja);
 
-    if (!dados.length) return toast('Nenhuma loja encontrada no arquivo', 'err');
+    if (!dados.length) return toast('Nenhuma loja encontrada', 'err');
 
     document.getElementById('preview').innerHTML = `
-      <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px;font-size:0.82rem">
+      <div style="margin-top:12px;padding:14px;background:var(--surface2);border-radius:10px;font-size:0.82rem">
         <strong>${dados.length} lojas encontradas</strong>
         <div style="color:var(--dim);margin-top:4px">Ex: ${dados[0].nome_loja} · ${dados[0].bairro}</div>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-primary" onclick="importar(window._imp)">⬆ Importar agora</button>
+        <div style="color:var(--dim);margin-top:4px;font-size:0.75rem">📡 Os endereços serão geocodificados automaticamente após a importação</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="importar(window._imp)">⬆ Importar + Geocodificar</button>
           <button class="btn btn-outline" onclick="document.getElementById('preview').innerHTML=''">Cancelar</button>
         </div>
       </div>`;
     window._imp = dados;
   };
-  r.readAsBinaryString(file);
+  reader.readAsBinaryString(file);
 }
 
 async function importar(dados) {
@@ -511,28 +782,44 @@ async function importar(dados) {
   if (error) return toast('Erro: ' + error.message, 'err');
   document.getElementById('preview').innerHTML = '';
   document.getElementById('fileIn').value = '';
-  toast(`${dados.length} lojas importadas! ✅`, 'ok');
-  carregarTabelaLojas();
-  carregarLojas();
+  toast(`${dados.length} lojas importadas! Iniciando geocodificação...`, 'ok');
+  await carregarTabelaLojas();
+  await carregarLojas();
+  // Geocodifica automaticamente depois do import
+  setTimeout(geocodificarPendentes, 1500);
 }
 
+// ══════════════════════════════════════════
+//  PAINEL: TABELA
+// ══════════════════════════════════════════
 async function carregarTabelaLojas() {
   const el = document.getElementById('tblLojas');
   el.innerHTML = '<div class="msg">Carregando...</div>';
-  const { data, error } = await sb.from('lojas').select('dn, nome_loja, bairro, zona').eq('ativa', true).order('nome_loja');
+  const { data, error } = await sb.from('lojas').select('dn, nome_loja, bairro, zona, latitude, longitude').eq('ativa', true).order('nome_loja');
   if (error) { el.innerHTML = `<div class="msg err">❌ ${error.message}</div>`; return; }
   if (!data?.length) { el.innerHTML = '<div class="msg">Nenhuma loja cadastrada ainda</div>'; return; }
+  const semGeo = data.filter(l => !l.latitude).length;
   el.innerHTML = `
-    <p style="font-size:0.78rem;color:var(--dim);margin-bottom:10px">${data.length} lojas</p>
+    <p style="font-size:0.78rem;color:var(--dim);margin-bottom:10px">
+      ${data.length} lojas · 
+      <span style="color:${semGeo?'var(--orange)':'var(--green)'}">
+        ${semGeo ? `⚠️ ${semGeo} sem coordenadas GPS — clique "Geocodificar"` : '✅ Todas geocodificadas'}
+      </span>
+    </p>
     <div class="table-wrap"><table>
-      <thead><tr><th>DN</th><th>Nome</th><th>Bairro</th><th>Zona</th></tr></thead>
-      <tbody>${data.map(l => `<tr><td>${l.dn||'—'}</td><td>${l.nome_loja}</td><td>${l.bairro||'—'}</td><td>${l.zona||'—'}</td></tr>`).join('')}
+      <thead><tr><th>DN</th><th>Nome</th><th>Bairro</th><th>Zona</th><th>GPS</th></tr></thead>
+      <tbody>${data.map(l => `
+        <tr>
+          <td>${l.dn||'—'}</td><td>${l.nome_loja}</td>
+          <td>${l.bairro||'—'}</td><td>${l.zona||'—'}</td>
+          <td>${l.latitude ? '✅' : '⚠️'}</td>
+        </tr>`).join('')}
       </tbody>
     </table></div>`;
 }
 
 async function limpar() {
-  if (!confirm('Apagar TODAS as lojas e visitas? Não pode ser desfeito.')) return;
+  if (!confirm('Apagar TODAS as lojas e visitas?')) return;
   await sb.from('visitas').delete().neq('id','00000000-0000-0000-0000-000000000000');
   await sb.from('lojas').delete().neq('id','00000000-0000-0000-0000-000000000000');
   toast('Dados apagados', 'ok');
