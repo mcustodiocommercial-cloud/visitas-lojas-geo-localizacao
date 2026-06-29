@@ -284,7 +284,7 @@
       ondrop="onDrop(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave()">
       <div class="icon">📂</div>
       <strong>Clique ou arraste o arquivo aqui</strong>
-      <p>Aceita .xlsx, .xls e .csv · Geocodificação automática via OpenStreetMap</p>
+      <p>Aceita .xlsx, .xls e .csv · Geocodificação automática via Google Maps</p>
     </div>
     <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFile(event)" />
 
@@ -674,24 +674,37 @@ async function carregarHistorico() {
 // ══════════════════════════════════════════
 //  GEOCODIFICAÇÃO (OpenStreetMap Nominatim)
 // ══════════════════════════════════════════
+const GOOGLE_API_KEY = 'AIzaSyAjW7kptv1C6T46O84lcRDUNqEryO9viRE';
+
 async function geocodificarEndereco(logradouro, numero, bairro, cep) {
-  const q = encodeURIComponent(`${logradouro} ${numero}, ${bairro}, São Paulo, Brazil`);
+  // Tenta com endereço completo
+  const endCompleto = `${logradouro} ${numero}, ${bairro}, São Paulo, SP, Brasil`;
   try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
-      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'VisitasLojas/1.0' }
-    });
-    const data = await r.json();
-    if (data?.[0]) return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    const r = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endCompleto)}&key=${GOOGLE_API_KEY}`
+    );
+    const d = await r.json();
+    if (d.status === 'OK' && d.results?.[0]) {
+      const loc = d.results[0].geometry.location;
+      return { lat: loc.lat, lon: loc.lng };
+    }
   } catch(e) {}
+
   // Fallback: só CEP
   if (cep) {
     const cepLimpo = cep.replace(/\D/g,'');
     try {
-      const r2 = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${cepLimpo}&country=Brazil&format=json&limit=1`);
+      const r2 = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${cepLimpo},Brasil&key=${GOOGLE_API_KEY}`
+      );
       const d2 = await r2.json();
-      if (d2?.[0]) return { lat: parseFloat(d2[0].lat), lon: parseFloat(d2[0].lon) };
+      if (d2.status === 'OK' && d2.results?.[0]) {
+        const loc = d2.results[0].geometry.location;
+        return { lat: loc.lat, lon: loc.lng };
+      }
     } catch(e) {}
   }
+
   return null;
 }
 
@@ -718,8 +731,7 @@ async function geocodificarPendentes() {
       ok++;
     } else { fail++; }
 
-    // Respeita limite do Nominatim: 1 req/s
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise(r => setTimeout(r, 200)); // pausa leve entre requisições
   }
 
   prog.style.display = 'none';
@@ -772,7 +784,7 @@ function processarArquivo(file) {
       <div style="margin-top:12px;padding:14px;background:var(--surface2);border-radius:10px;font-size:0.82rem">
         <strong>${dados.length} lojas encontradas</strong>
         <div style="color:var(--dim);margin-top:4px">Ex: ${dados[0].nome_loja} · ${dados[0].bairro}</div>
-        <div style="color:var(--dim);margin-top:4px;font-size:0.75rem">📡 Os endereços serão geocodificados automaticamente após a importação</div>
+        <div style="color:var(--dim);margin-top:4px;font-size:0.75rem">📡 Os endereços serão geocodificados via Google Maps após a importação</div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="importar(window._imp)">⬆ Importar + Geocodificar</button>
           <button class="btn btn-outline" onclick="document.getElementById('preview').innerHTML=''">Cancelar</button>
