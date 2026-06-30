@@ -324,8 +324,9 @@
 // ══════════════════════════════════════════
 const SB_URL   = 'https://giocnzylrabbiehfigdg.supabase.co';
 const SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpb2NuenlscmFiYmllaGZpZ2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2ODc0NTQsImV4cCI6MjA5ODI2MzQ1NH0.j5ZpMgRcYXbTwdMPOfa9cGI47ymENX3qXwN_vbHAIdE';
-const RAIO_M   = 50;      // metros para marcar automaticamente
-const COOLDOWN = 300000;  // 5 min entre marcações da mesma loja
+const RAIO_M       = 25;      // metros para marcar automaticamente (era 50)
+const COOLDOWN     = 300000;  // 5 min entre marcações da mesma loja
+const ACCURACY_MAX = 25;      // só marca automaticamente se a precisão do GPS for <= 25m
 
 // ══════════════════════════════════════════
 //  ESTADO
@@ -446,7 +447,14 @@ function setGpsStatus(estado, txt) {
 async function onPosicao(pos) {
   posAtual = pos.coords;
   const { latitude, longitude, accuracy } = pos.coords;
-  setGpsStatus('ok', `📡 GPS ativo · precisão ${Math.round(accuracy)}m`);
+
+  const precisaoBoa = accuracy <= ACCURACY_MAX;
+  setGpsStatus(
+    'ok',
+    precisaoBoa
+      ? `📡 GPS ativo · precisão ${Math.round(accuracy)}m`
+      : `📡 GPS impreciso (±${Math.round(accuracy)}m) · aguardando sinal melhor`
+  );
 
   // Verifica cada loja com coordenadas
   for (const loja of lojas) {
@@ -476,8 +484,8 @@ async function onPosicao(pos) {
       }
     }
 
-    // Marca automaticamente se dentro do raio
-    if (dist <= RAIO_M) {
+    // Marca automaticamente só se: dentro do raio E o GPS estiver com boa precisão
+    if (dist <= RAIO_M && precisaoBoa) {
       const agora = Date.now();
       if (marcadas.has(loja.id)) continue;
       if (ultimaMarcacao[loja.id] && agora - ultimaMarcacao[loja.id] < COOLDOWN) continue;
