@@ -40,7 +40,7 @@
     .logo em { color: #fff; font-style: normal; font-weight: 400; }
     nav button {
       background: none; border: none; color: rgba(255,255,255,0.6);
-      font-family: var(--font); font-size: 0.8rem; font-weight: 500;
+      font-family: var(--font); font-size: 1.5rem; font-weight: 500;
       padding: 6px 11px; border-radius: 8px; cursor: pointer;
       transition: all .15s; white-space: nowrap; flex-shrink: 0;
     }
@@ -254,7 +254,7 @@
     </label>
     <div>
       <strong>Rastreamento automático</strong>
-      <div style="color:var(--dim);font-size:0.72rem">Marca a loja ao chegar a 50m · como o Strava</div>
+
     </div>
   </div>
 
@@ -324,19 +324,16 @@
 // ══════════════════════════════════════════
 const SB_URL   = 'https://giocnzylrabbiehfigdg.supabase.co';
 const SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpb2NuenlscmFiYmllaGZpZ2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2ODc0NTQsImV4cCI6MjA5ODI2MzQ1NH0.j5ZpMgRcYXbTwdMPOfa9cGI47ymENX3qXwN_vbHAIdE';
-const RAIO_M       = 50;       // metros para marcar automaticamente
-const COOLDOWN     = 300000;   // 5 min entre marcações da mesma loja
-const TEMPO_MIN_MS = 5 * 60 * 1000; // tempo mínimo dentro do raio para marcar
+const RAIO_M   = 50;      // metros para marcar automaticamente
+const COOLDOWN = 300000;  // 5 min entre marcações da mesma loja
 
 // ══════════════════════════════════════════
 //  ESTADO
 // ══════════════════════════════════════════
 let sb, lojas = [], zonaAtiva = 'Todas';
 let watchId = null, posAtual = null;
-const marcadas       = new Set();
-const ultimaMarcacao = {};
-const entradaLoja    = {};  // loja_id → timestamp quando entrou no raio
-const timerLoja      = {};  // loja_id → setInterval do contador
+const marcadas = new Set(); // IDs já marcados nesta sessão (evita duplo)
+const ultimaMarcacao = {};  // loja_id → timestamp
 
 // ══════════════════════════════════════════
 //  UTILITÁRIOS
@@ -479,75 +476,29 @@ async function onPosicao(pos) {
       }
     }
 
-    // Marcação automática com permanência mínima de 5 min
-    if (dist <= RAIO_M && !marcadas.has(loja.id)) {
+    // Marca automaticamente se dentro do raio
+    if (dist <= RAIO_M) {
       const agora = Date.now();
+      if (marcadas.has(loja.id)) continue;
       if (ultimaMarcacao[loja.id] && agora - ultimaMarcacao[loja.id] < COOLDOWN) continue;
-      if (!entradaLoja[loja.id]) {
-        entradaLoja[loja.id] = agora;
-        iniciarTimerLoja(loja, latitude, longitude, dist);
-      }
-    } else if (dist > RAIO_M && entradaLoja[loja.id] && !marcadas.has(loja.id)) {
-      cancelarTimerLoja(loja.id); // saiu antes dos 5 min — cancela
+
+      marcadas.add(loja.id);
+      ultimaMarcacao[loja.id] = agora;
+      await registrarVisita(loja, latitude, longitude, dist, true);
     }
   }
-}
-
-// ══════════════════════════════════════════
-//  TIMER DE PERMANÊNCIA (5 min)
-// ══════════════════════════════════════════
-function iniciarTimerLoja(loja, lat, lon, dist) {
-  const itemEl = document.getElementById('it-' + loja.id);
-  if (!itemEl) return;
-  let timerEl = itemEl.querySelector('.timer-visita');
-  if (!timerEl) {
-    timerEl = document.createElement('div');
-    timerEl.className = 'timer-visita';
-    timerEl.innerHTML = `⏱ Permanecendo... <span class="timer-bar-wrap"><span class="timer-bar" style="width:0%"></span></span> <span class="timer-txt">5:00</span>`;
-    itemEl.querySelector('.loja-end')?.insertAdjacentElement('afterend', timerEl);
-  }
-  const bar = timerEl.querySelector('.timer-bar');
-  const txt = timerEl.querySelector('.timer-txt');
-  const inicio = entradaLoja[loja.id];
-  timerLoja[loja.id] = setInterval(async () => {
-    const elapsed = Date.now() - inicio;
-    const pct = Math.min(100, (elapsed / TEMPO_MIN_MS) * 100);
-    const restMs = Math.max(0, TEMPO_MIN_MS - elapsed);
-    const mm = Math.floor(restMs / 60000);
-    const ss = Math.floor((restMs % 60000) / 1000);
-    bar.style.width = pct + '%';
-    bar.style.background = pct >= 100 ? 'var(--green)' : 'var(--orange)';
-    txt.textContent = pct >= 100 ? '✅' : `${mm}:${ss.toString().padStart(2,'0')}`;
-    if (elapsed >= TEMPO_MIN_MS) {
-      clearInterval(timerLoja[loja.id]);
-      delete timerLoja[loja.id];
-      delete entradaLoja[loja.id];
-      if (!marcadas.has(loja.id)) {
-        marcadas.add(loja.id);
-        ultimaMarcacao[loja.id] = Date.now();
-        timerEl.remove();
-        await registrarVisita(loja, lat, lon, dist, true, 5);
-      }
-    }
-  }, 1000);
-}
-
-function cancelarTimerLoja(id) {
-  if (timerLoja[id]) { clearInterval(timerLoja[id]); delete timerLoja[id]; }
-  delete entradaLoja[id];
-  document.getElementById('it-' + id)?.querySelector('.timer-visita')?.remove();
 }
 
 // ══════════════════════════════════════════
 //  REGISTRAR VISITA (auto ou manual)
 // ══════════════════════════════════════════
-async function registrarVisita(loja, lat, lon, dist, automatica = false, tempoPermanencia = null) {
+async function registrarVisita(loja, lat, lon, dist, automatica = false) {
   const { error } = await sb.from('visitas').insert({
     loja_id: loja.id,
     latitude_visita: lat,
     longitude_visita: lon,
     distancia_metros: Math.round(dist),
-    observacao: automatica ? (tempoPermanencia ? `automática · ${tempoPermanencia}min na loja` : 'automática') : 'manual'
+    observacao: automatica ? 'automática' : 'manual'
   });
 
   if (error) { toast('Erro ao salvar: ' + error.message, 'err'); marcadas.delete(loja.id); return; }
@@ -568,8 +519,7 @@ async function registrarVisita(loja, lat, lon, dist, automatica = false, tempoPe
     if (distEl) distEl.remove();
     const endEl = itemEl.querySelector('.loja-end');
     if (endEl && !itemEl.querySelector('.hora-ok')) {
-      const tempoLabel = tempoPermanencia ? ` · <span class="tempo-badge">⏱ ${tempoPermanencia}min</span>` : '';
-      endEl.insertAdjacentHTML('afterend', `<div class="hora-ok">✓ Visitada às ${hora}${automatica ? ' · auto' : ''}${tempoLabel}</div>`);
+      endEl.insertAdjacentHTML('afterend', `<div class="hora-ok">✓ Visitada às ${hora}${automatica ? ' · auto' : ''}</div>`);
     }
   }
 
@@ -582,22 +532,27 @@ async function registrarVisita(loja, lat, lon, dist, automatica = false, tempoPe
 // Botão manual
 async function marcar(id, btn) {
   btn.disabled = true; btn.textContent = '📡...';
-  cancelarTimerLoja(id);
-  const registrar = async (coords) => {
+  if (posAtual) {
+    const loja = lojas.find(l => l.id === id);
+    if (loja) {
+      const dist = (loja.latitude && loja.longitude)
+        ? distancia(posAtual.latitude, posAtual.longitude, loja.latitude, loja.longitude)
+        : 0;
+      await registrarVisita(loja, posAtual.latitude, posAtual.longitude, dist, false);
+      return;
+    }
+  }
+  navigator.geolocation.getCurrentPosition(async pos => {
     const loja = lojas.find(l => l.id === id);
     if (!loja) return;
     const dist = (loja.latitude && loja.longitude)
-      ? distancia(coords.latitude, coords.longitude, loja.latitude, loja.longitude) : 0;
-    const tempoMin = entradaLoja[id] ? Math.max(1, Math.round((Date.now() - entradaLoja[id]) / 60000)) : null;
-    delete entradaLoja[id];
-    await registrarVisita(loja, coords.latitude, coords.longitude, dist, false, tempoMin);
-  };
-  if (posAtual) { await registrar(posAtual); return; }
-  navigator.geolocation.getCurrentPosition(
-    async pos => registrar(pos.coords),
-    () => { btn.disabled = false; btn.textContent = '📍 Marcar'; toast('Ative a localização do celular', 'err'); },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
+      ? distancia(pos.coords.latitude, pos.coords.longitude, loja.latitude, loja.longitude)
+      : 0;
+    await registrarVisita(loja, pos.coords.latitude, pos.coords.longitude, dist, false);
+  }, () => {
+    btn.disabled = false; btn.textContent = '📍 Marcar';
+    toast('Ative a localização do celular', 'err');
+  }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
 // ══════════════════════════════════════════
@@ -907,7 +862,6 @@ As lojas permanecem cadastradas.`)) return;
     .lte('visitada_em', d+'T23:59:59');
   if (error) return toast('Erro: ' + error.message, 'err');
   marcadas.clear();
-  Object.keys(entradaLoja).forEach(k => cancelarTimerLoja(k));
   Object.keys(ultimaMarcacao).forEach(k => delete ultimaMarcacao[k]);
   toast('Visitas de hoje apagadas ✅', 'ok');
   await carregarLojas();
