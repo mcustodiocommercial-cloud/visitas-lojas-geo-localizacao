@@ -60,15 +60,6 @@
     nav button.active { background: var(--green); color: #fff; }
 
     /* GPS STATUS BAR */
-    #gpsBar {
-      background: var(--navy); color: rgba(255,255,255,0.7);
-      font-size: 0.72rem; text-align: center; padding: 5px 12px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    #gpsDot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0; }
-    #gpsDot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-    #gpsDot.err { background: var(--red); }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
     /* PAGES */
@@ -255,11 +246,7 @@
   <button onclick="showPage('painel')"    id="nav-painel">⚙️ <span>Painel</span></button>
 </nav>
 
-<!-- BARRA GPS -->
-<div id="gpsBar">
-  <div id="gpsDot"></div>
-  <span id="gpsTxt">GPS desligado — ative o rastreamento</span>
-</div>
+
 
 <!-- NOTIFICAÇÃO FLUTUANTE -->
 <div id="notif"></div>
@@ -425,61 +412,46 @@ function toggleRastreamento(on) {
 
 function iniciarRastreamento() {
   if (watchId !== null) return; // já está ativo
-  if (!navigator.geolocation) { toast('GPS não disponível neste dispositivo', 'err'); return; }
+  if (!navigator.geolocation) {
+    toast('GPS não disponível neste dispositivo', 'err');
+    atualizarCardGPS('err');
+    return;
+  }
+  if (Notification.permission === 'default') Notification.requestPermission();
+  atualizarCardGPS('buscando');
   watchId = navigator.geolocation.watchPosition(onPosicao, erroGPS, {
     enableHighAccuracy: true,
     timeout: 30000,
     maximumAge: 5000
   });
-  document.getElementById('gps-coords').textContent = 'Rastreando...';
 }
 
-function iniciarGPS() {
-  if (!navigator.geolocation) {
-    toast('Geolocalização não suportada', 'err');
-    document.getElementById('toggleGPS').checked = false;
-    return;
+function atualizarCardGPS(estado, texto) {
+  const dot    = document.getElementById('gps-dot');
+  const coords = document.getElementById('gps-coords');
+  const titulo = document.querySelector('#gps-status-bar strong');
+  if (estado === 'ok') {
+    if (dot)    { dot.style.background = 'var(--green)'; dot.style.animation = 'pulse 1.5s infinite'; }
+    if (titulo) titulo.style.color = 'var(--green)';
+    if (coords && texto) coords.textContent = texto;
+  } else if (estado === 'buscando') {
+    if (dot)    { dot.style.background = '#f59e0b'; dot.style.animation = 'pulse 1s infinite'; }
+    if (titulo) { titulo.textContent = 'Buscando GPS...'; titulo.style.color = '#f59e0b'; }
+    if (coords) coords.textContent = 'Aguardando sinal...';
+  } else if (estado === 'err') {
+    if (dot)    { dot.style.background = '#e53e3e'; dot.style.animation = 'none'; }
+    if (titulo) { titulo.textContent = 'Erro de GPS'; titulo.style.color = '#e53e3e'; }
+    if (coords) coords.textContent = texto || 'Verifique permissões do navegador';
   }
-
-  // Pede permissão de notificação
-  if (Notification.permission === 'default') Notification.requestPermission();
-
-  setGpsStatus('buscando', '📡 Buscando sinal GPS...');
-
-  watchId = navigator.geolocation.watchPosition(
-    pos => onPosicao(pos),
-    err => {
-      setGpsStatus('err', '❌ Erro de GPS — verifique permissões');
-      console.error('GPS erro:', err);
-    },
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
-  );
 }
 
-function pararGPS() {
-  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  posAtual = null;
-  setGpsStatus('off', 'GPS desligado — ative o rastreamento');
-  // Remove destaques de proximidade
-  document.querySelectorAll('.loja-item.proxima').forEach(el => {
-    el.classList.remove('proxima');
-    el.querySelector('.dot')?.classList.remove('near');
-    const d = el.querySelector('.loja-dist');
-    if (d) d.remove();
-  });
-}
 
-function setGpsStatus(estado, txt) {
-  const dot = document.getElementById('gpsDot');
-  const label = document.getElementById('gpsTxt');
-  dot.className = estado === 'ok' ? 'ok' : estado === 'err' ? 'err' : '';
-  label.textContent = txt;
-}
+
 
 async function onPosicao(pos) {
   posAtual = pos.coords;
   const { latitude, longitude, accuracy } = pos.coords;
-  setGpsStatus('ok', `📡 GPS ativo · precisão ${Math.round(accuracy)}m`);
+  }m`);
 
   // Verifica cada loja com coordenadas
   for (const loja of lojas) {
