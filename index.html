@@ -3,19 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Visitas LM Consig</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0d2d4f" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Visitas" />
-  <link rel="icon" type="image/x-icon"    href="favicon.ico" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-  <link rel="apple-touch-icon"            href="apple-touch-icon.png" />
+  <title>Visitas de Lojas</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -60,6 +48,15 @@
     nav button.active { background: var(--green); color: #fff; }
 
     /* GPS STATUS BAR */
+    #gpsBar {
+      background: var(--navy); color: rgba(255,255,255,0.7);
+      font-size: 0.72rem; text-align: center; padding: 5px 12px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    #gpsDot { width: 8px; height: 8px; border-radius: 50%; background: #666; flex-shrink: 0; }
+    #gpsDot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+    #gpsDot.err { background: var(--red); }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
     /* PAGES */
@@ -115,19 +112,11 @@
     .loja-nome { font-weight: 600; font-size: 0.87rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--navy); }
     .loja-end  { font-size: 0.72rem; color: var(--dim); margin-top: 2px; }
     .loja-dist { font-size: 0.68rem; color: var(--orange); margin-top: 2px; font-weight: 600; }
-    .hora-ok   { font-size: 0.68rem; color: var(--green); margin-top: 2px; font-weight: 500; }
-    .timer-visita { font-size: 0.68rem; color: var(--orange); margin-top: 2px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .hora-ok     { font-size: 0.68rem; color: var(--green); margin-top: 2px; font-weight: 500; }
+    .timer-visita { font-size: 0.68rem; color: var(--orange); margin-top: 4px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
     .timer-bar-wrap { background: #e0ede8; border-radius: 20px; height: 5px; width: 80px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 4px; }
     .timer-bar { background: var(--orange); height: 100%; border-radius: 20px; transition: width 1s linear; }
     .tempo-badge { font-size: 0.63rem; background: #fff3cd; color: #856404; border: 1px solid #ffc107; padding: 2px 7px; border-radius: 10px; margin-left: 4px; font-weight: 600; }
-    .gps-config { display:flex; align-items:center; gap:12px; background:var(--card); border-radius:14px; padding:12px 16px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)} }
-    #pwa-banner { position:fixed;bottom:0;left:0;right:0;background:#0d2d4f;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 -2px 12px rgba(0,0,0,.3); }
-    #pwa-banner img { width:40px;height:40px;border-radius:10px; }
-    #pwa-banner .pwa-text { flex:1;font-size:0.82rem; }
-    #pwa-banner .pwa-text strong { display:block;font-size:0.9rem; }
-    #pwa-banner button { background:#3cb87a;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:0.8rem;cursor:pointer;white-space:nowrap; }
-    #pwa-banner .pwa-close { background:transparent;color:#aaa;font-size:1.1rem;padding:4px 8px; }
     .badge { font-size: 0.63rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; background: rgba(13,45,79,0.07); color: var(--navy); }
     .btn-marcar {
       background: var(--navy); color: #fff; border: none;
@@ -246,7 +235,11 @@
   <button onclick="showPage('painel')"    id="nav-painel">⚙️ <span>Painel</span></button>
 </nav>
 
-
+<!-- BARRA GPS -->
+<div id="gpsBar">
+  <div id="gpsDot"></div>
+  <span id="gpsTxt">GPS desligado — ative o rastreamento</span>
+</div>
 
 <!-- NOTIFICAÇÃO FLUTUANTE -->
 <div id="notif"></div>
@@ -254,14 +247,15 @@
 <!-- ROTAS -->
 <div class="page active" id="page-rotas">
 
-  <div class="gps-config" id="gps-status-bar">
-    <span style="font-size:1.2rem">📡</span>
+  <div class="gps-config">
+    <label class="toggle">
+      <input type="checkbox" id="toggleGPS" onchange="toggleRastreamento(this.checked)">
+      <span class="slider"></span>
+    </label>
     <div>
-      <strong style="color:var(--green)">Rastreamento Ativo</strong>
-      <div id="gps-coords" style="color:var(--dim);font-size:0.72rem">Aguardando sinal GPS...</div>
+      <strong>Rastreamento automático</strong>
+      <div style="color:var(--dim);font-size:0.72rem">Marca a loja ao chegar a 50m · como o Strava</div>
     </div>
-    <span id="gps-dot" style="width:10px;height:10px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.5s infinite"></span>
-  </div>
   </div>
 
   <div class="stats">
@@ -330,9 +324,9 @@
 // ══════════════════════════════════════════
 const SB_URL   = 'https://giocnzylrabbiehfigdg.supabase.co';
 const SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpb2NuenlscmFiYmllaGZpZ2RnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2ODc0NTQsImV4cCI6MjA5ODI2MzQ1NH0.j5ZpMgRcYXbTwdMPOfa9cGI47ymENX3qXwN_vbHAIdE';
-const RAIO_M       = 50;
-const COOLDOWN     = 300000;
-const TEMPO_MIN_MS = 5 * 60 * 1000; // 5 min mínimo dentro do raio
+const RAIO_M       = 50;       // metros para marcar automaticamente
+const COOLDOWN     = 300000;   // 5 min entre marcações da mesma loja
+const TEMPO_MIN_MS = 5 * 60 * 1000; // tempo mínimo dentro do raio para marcar
 
 // ══════════════════════════════════════════
 //  ESTADO
@@ -341,8 +335,8 @@ let sb, lojas = [], zonaAtiva = 'Todas';
 let watchId = null, posAtual = null;
 const marcadas       = new Set();
 const ultimaMarcacao = {};
-const entradaLoja    = {};
-const timerLoja      = {};
+const entradaLoja    = {};  // loja_id → timestamp quando entrou no raio
+const timerLoja      = {};  // loja_id → setInterval do contador
 
 // ══════════════════════════════════════════
 //  UTILITÁRIOS
@@ -405,53 +399,57 @@ function distancia(lat1, lon1, lat2, lon2) {
 // ══════════════════════════════════════════
 //  RASTREAMENTO GPS
 // ══════════════════════════════════════════
-function toggleRastreamento(on) {
-  // Sempre mantém ativo — ignora tentativa de desligar
-  iniciarRastreamento();
+function toggleRastreamento(ativo) {
+  if (ativo) iniciarGPS();
+  else pararGPS();
 }
 
-function iniciarRastreamento() {
-  if (watchId !== null) return; // já está ativo
+function iniciarGPS() {
   if (!navigator.geolocation) {
-    toast('GPS não disponível neste dispositivo', 'err');
-    atualizarCardGPS('err');
+    toast('Geolocalização não suportada', 'err');
+    document.getElementById('toggleGPS').checked = false;
     return;
   }
+
+  // Pede permissão de notificação
   if (Notification.permission === 'default') Notification.requestPermission();
-  atualizarCardGPS('buscando');
-  watchId = navigator.geolocation.watchPosition(onPosicao, erroGPS, {
-    enableHighAccuracy: true,
-    timeout: 30000,
-    maximumAge: 5000
+
+  setGpsStatus('buscando', '📡 Buscando sinal GPS...');
+
+  watchId = navigator.geolocation.watchPosition(
+    pos => onPosicao(pos),
+    err => {
+      setGpsStatus('err', '❌ Erro de GPS — verifique permissões');
+      console.error('GPS erro:', err);
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+  );
+}
+
+function pararGPS() {
+  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  posAtual = null;
+  setGpsStatus('off', 'GPS desligado — ative o rastreamento');
+  // Remove destaques de proximidade
+  document.querySelectorAll('.loja-item.proxima').forEach(el => {
+    el.classList.remove('proxima');
+    el.querySelector('.dot')?.classList.remove('near');
+    const d = el.querySelector('.loja-dist');
+    if (d) d.remove();
   });
 }
 
-function atualizarCardGPS(estado, texto) {
-  const dot    = document.getElementById('gps-dot');
-  const coords = document.getElementById('gps-coords');
-  const titulo = document.querySelector('#gps-status-bar strong');
-  if (estado === 'ok') {
-    if (dot)    { dot.style.background = 'var(--green)'; dot.style.animation = 'pulse 1.5s infinite'; }
-    if (titulo) titulo.style.color = 'var(--green)';
-    if (coords && texto) coords.textContent = texto;
-  } else if (estado === 'buscando') {
-    if (dot)    { dot.style.background = '#f59e0b'; dot.style.animation = 'pulse 1s infinite'; }
-    if (titulo) { titulo.textContent = 'Buscando GPS...'; titulo.style.color = '#f59e0b'; }
-    if (coords) coords.textContent = 'Aguardando sinal...';
-  } else if (estado === 'err') {
-    if (dot)    { dot.style.background = '#e53e3e'; dot.style.animation = 'none'; }
-    if (titulo) { titulo.textContent = 'Erro de GPS'; titulo.style.color = '#e53e3e'; }
-    if (coords) coords.textContent = texto || 'Verifique permissões do navegador';
-  }
+function setGpsStatus(estado, txt) {
+  const dot = document.getElementById('gpsDot');
+  const label = document.getElementById('gpsTxt');
+  dot.className = estado === 'ok' ? 'ok' : estado === 'err' ? 'err' : '';
+  label.textContent = txt;
 }
-
-
-
 
 async function onPosicao(pos) {
   posAtual = pos.coords;
   const { latitude, longitude, accuracy } = pos.coords;
-  }m`);
+  setGpsStatus('ok', `📡 GPS ativo · precisão ${Math.round(accuracy)}m`);
 
   // Verifica cada loja com coordenadas
   for (const loja of lojas) {
@@ -481,6 +479,7 @@ async function onPosicao(pos) {
       }
     }
 
+    // Marcação automática com permanência mínima de 5 min
     if (dist <= RAIO_M && !marcadas.has(loja.id)) {
       const agora = Date.now();
       if (ultimaMarcacao[loja.id] && agora - ultimaMarcacao[loja.id] < COOLDOWN) continue;
@@ -489,13 +488,13 @@ async function onPosicao(pos) {
         iniciarTimerLoja(loja, latitude, longitude, dist);
       }
     } else if (dist > RAIO_M && entradaLoja[loja.id] && !marcadas.has(loja.id)) {
-      cancelarTimerLoja(loja.id);
+      cancelarTimerLoja(loja.id); // saiu antes dos 5 min — cancela
     }
   }
 }
 
 // ══════════════════════════════════════════
-//  TIMER DE PERMANÊNCIA
+//  TIMER DE PERMANÊNCIA (5 min)
 // ══════════════════════════════════════════
 function iniciarTimerLoja(loja, lat, lon, dist) {
   const itemEl = document.getElementById('it-' + loja.id);
@@ -527,8 +526,7 @@ function iniciarTimerLoja(loja, lat, lon, dist) {
         marcadas.add(loja.id);
         ultimaMarcacao[loja.id] = Date.now();
         timerEl.remove();
-        const minutos = Math.round(TEMPO_MIN_MS / 60000);
-        await registrarVisita(loja, lat, lon, dist, true, minutos);
+        await registrarVisita(loja, lat, lon, dist, true, 5);
       }
     }
   }, 1000);
@@ -566,8 +564,8 @@ async function registrarVisita(loja, lat, lon, dist, automatica = false, tempoPe
     const btn = itemEl.querySelector('.btn-marcar');
     if (btn) { btn.disabled = true; btn.textContent = '✓ Ok'; }
     const hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    itemEl.querySelector('.loja-dist')?.remove();
-    itemEl.querySelector('.timer-visita')?.remove();
+    const distEl = itemEl.querySelector('.loja-dist');
+    if (distEl) distEl.remove();
     const endEl = itemEl.querySelector('.loja-end');
     if (endEl && !itemEl.querySelector('.hora-ok')) {
       const tempoLabel = tempoPermanencia ? ` · <span class="tempo-badge">⏱ ${tempoPermanencia}min</span>` : '';
@@ -606,8 +604,6 @@ async function marcar(id, btn) {
 //  CARREGAR LOJAS
 // ══════════════════════════════════════════
 async function init() {
-  // Liga rastreamento automaticamente ao abrir
-  setTimeout(() => iniciarRastreamento(), 1500);
   try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {
     document.getElementById('lista').innerHTML = `<div class="msg err">❌ ${e.message}</div>`; return;
   }
@@ -731,21 +727,38 @@ const GOOGLE_API_KEY = 'AIzaSyAjW7kptv1C6T46O84lcRDUNqEryO9viRE';
 
 async function googleGeocode(query) {
   try {
-    const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}&region=br&language=pt-BR`);
+    const r = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}&region=br&language=pt-BR`
+    );
     const d = await r.json();
-    if (d.status === 'OK' && d.results?.[0]) { const loc = d.results[0].geometry.location; return { lat: loc.lat, lon: loc.lng }; }
+    if (d.status === 'OK' && d.results?.[0]) {
+      const loc = d.results[0].geometry.location;
+      return { lat: loc.lat, lon: loc.lng };
+    }
   } catch(e) {}
   return null;
 }
 
 async function geocodificarEndereco(logradouro, numero, bairro, cep) {
+  // Tentativa 1: endereço completo
   let result = await googleGeocode(`${logradouro} ${numero}, ${bairro}, São Paulo, SP, Brasil`);
   if (result) return result;
+
+  // Tentativa 2: sem número (pode estar errado na planilha)
   result = await googleGeocode(`${logradouro}, ${bairro}, São Paulo, SP, Brasil`);
   if (result) return result;
+
+  // Tentativa 3: só rua + cidade (ignora bairro com grafia estranha)
   result = await googleGeocode(`${logradouro} ${numero}, São Paulo, Brasil`);
   if (result) return result;
-  if (cep) { const cepLimpo = cep.replace(/\D/g,''); result = await googleGeocode(`CEP ${cepLimpo}, Brasil`); if (result) return result; }
+
+  // Tentativa 4: só CEP
+  if (cep) {
+    const cepLimpo = cep.replace(/\D/g,'');
+    result = await googleGeocode(`CEP ${cepLimpo}, Brasil`);
+    if (result) return result;
+  }
+
   return null;
 }
 
@@ -772,7 +785,7 @@ async function geocodificarPendentes() {
       ok++;
     } else { fail++; }
 
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 150)); // pausa leve entre requisições
   }
 
   prog.style.display = 'none';
@@ -797,7 +810,7 @@ function processarArquivo(file) {
     const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
     // Mapeamento exato das colunas da planilha:
-    // DN | CNPJ | NOME DA LOJA | GCM (responsável) | NOME (logradouro) | Nº | BAIRRO | CEP | ZONA
+    // dn | cnpj | nome_loja | gcm | coordenador | logradouro | numero | bairro | cep | zona
     const col = (row, ...chaves) => {
       const k = Object.keys(row).find(c =>
         chaves.some(ch => c.trim().toLowerCase() === ch.toLowerCase())
@@ -889,7 +902,9 @@ async function resetVisitas() {
   if (!confirm(`Apagar todas as visitas de hoje (${dataFmt})?
 
 As lojas permanecem cadastradas.`)) return;
-  const { error } = await sb.from('visitas').delete().gte('visitada_em', d+'T00:00:00').lte('visitada_em', d+'T23:59:59');
+  const { error } = await sb.from('visitas').delete()
+    .gte('visitada_em', d+'T00:00:00')
+    .lte('visitada_em', d+'T23:59:59');
   if (error) return toast('Erro: ' + error.message, 'err');
   marcadas.clear();
   Object.keys(entradaLoja).forEach(k => cancelarTimerLoja(k));
@@ -916,74 +931,6 @@ async function exportar() {
 }
 
 window.addEventListener('load', init);
-</script>
-
-<!-- PWA: banner de instalação + Service Worker -->
-<div id="pwa-banner" style="display:none">
-  <img src="android-chrome-192x192.png" alt="Visitas" />
-  <div class="pwa-text">
-    <strong>Instalar como App</strong>
-    Adicione à tela inicial para usar offline e em segundo plano
-  </div>
-  <button onclick="instalarPWA()">Instalar</button>
-  <button class="pwa-close" onclick="document.getElementById('pwa-banner').style.display='none'">✕</button>
-</div>
-
-<script>
-// ── Service Worker ──
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(reg => {
-    console.log('SW registrado:', reg.scope);
-  }).catch(e => console.warn('SW erro:', e));
-}
-
-// ── Banner de instalação PWA ──
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const banner = document.getElementById('pwa-banner');
-  if (!localStorage.getItem('pwa-dismissed')) banner.style.display = 'flex';
-});
-
-function instalarPWA() {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(choice => {
-    document.getElementById('pwa-banner').style.display = 'none';
-    localStorage.setItem('pwa-dismissed', '1');
-    deferredPrompt = null;
-  });
-}
-
-// ── Wake Lock: mantém tela acesa enquanto rastreando ──
-let wakeLock = null;
-async function pedirWakeLock() {
-  if ('wakeLock' in navigator) {
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      console.log('Wake Lock ativo — tela não vai apagar');
-    } catch(e) { console.warn('Wake Lock negado:', e); }
-  }
-}
-// Reativa Wake Lock se perder (ex: ao voltar do segundo plano)
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible' && wakeLock === null) {
-    await pedirWakeLock();
-  }
-});
-
-// ── Ping keepalive no SW para tentar manter vivo ──
-function pingSW() {
-  if (navigator.serviceWorker.controller) {
-    const ch = new MessageChannel();
-    navigator.serviceWorker.controller.postMessage('ping', [ch.port2]);
-  }
-}
-setInterval(pingSW, 25000);
-
-// Ativa wake lock assim que usuário interage com a página
-document.addEventListener('click', () => { if (!wakeLock) pedirWakeLock(); }, { once: true });
 </script>
 </body>
 </html>
