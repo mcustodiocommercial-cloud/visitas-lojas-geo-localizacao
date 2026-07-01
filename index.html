@@ -88,32 +88,33 @@
     .loja-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 6px;
     }
 
     /* CARD DE LOJA */
     .loja-item {
       background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 8px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 5px 6px;
       display: flex; flex-direction: column; align-items: center;
-      gap: 4px; text-align: center;
+      gap: 3px; text-align: center;
       transition: all .2s; box-shadow: var(--shadow);
-      cursor: default; position: relative; min-height: 90px;
+      cursor: default; position: relative;
+      min-height: 0; overflow: hidden;
     }
-    .loja-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .loja-item:hover { box-shadow: var(--shadow-md); }
 
-    /* Visitada recentemente — verde */
+    /* Visitada recentemente — fundo verde */
     .loja-item.visitada-recente {
-      border-color: var(--green);
-      border-width: 3px;
-      background: linear-gradient(160deg, #fff 60%, var(--green-pale));
+      border-color: #27ae60 !important;
+      border-width: 2.5px !important;
+      background: #89df75 !important;
     }
 
-    /* Nome da loja truncado */
+    /* Nome da loja truncado em 1 linha */
     .loja-nome {
-      font-weight: 600; font-size: 0.72rem;
+      font-weight: 600; font-size: 0.65rem;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       color: var(--navy); width: 100%;
     }
@@ -123,17 +124,14 @@
       border-color: var(--green) !important;
       border-width: 3px !important;
     }
-    .loja-item.visitada-recente::after {
-      content: '✓';
-      position: absolute; top: 4px; left: 6px;
-      font-size: 0.65rem; color: var(--green); font-weight: 700;
-    }
+
 
     /* Label de potencial com cor por faixa */
     .pot-label {
-      font-size: 0.6rem; font-weight: 700;
-      padding: 2px 8px; border-radius: 6px;
-      letter-spacing: .03em; width: 100%; text-align: center;
+      font-size: 0.58rem; font-weight: 700;
+      padding: 2px 4px; border-radius: 5px;
+      letter-spacing: .02em; width: 100%; text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .pot-label.pot-A { background: #FFD700; color: #000; }
     .pot-label.pot-B { background: #FFA500; color: #000; }
@@ -143,12 +141,11 @@
     .pot-label.pot-F { background: #111827; color: #fff; }
     .pot-label.pot-x { background: #e9ecef; color: #6c757d; }
 
-    /* Contador de visitas */
+    /* Contador de visitas — abaixo do label */
     .visit-count {
-      font-size: 0.58rem; color: var(--dim); font-weight: 500;
-      position: absolute; top: 5px; right: 6px;
+      font-size: 0.55rem; color: var(--dim); font-weight: 500;
     }
-    .visit-count span { color: var(--green); font-weight: 700; }
+    .visit-count span { color: #27ae60; font-weight: 700; }
 
     /* Hora da última visita */
     .hora-ok { font-size: 0.58rem; color: var(--green); font-weight: 600; }
@@ -667,10 +664,9 @@ function renderLista() {
     const potDesc = potClass === 'A' ? 'A. 1 Gravame' : potClass === 'B' ? 'B. 2-5 Gravames' : potClass === 'C' ? 'C. 6-10 Gravames' : potClass === 'D' ? 'D. 11-20 Gravames' : potClass === 'E' ? 'E. 21-30 Gravames' : potClass === 'F' ? 'F. > 30 Gravames' : '';
 
     return `<div class="loja-item ${visClass}" id="it-${l.id}">
-      ${total > 0 ? `<div class="visit-count"><span>${total}</span> vis.</div>` : ''}
       <div class="loja-nome" title="${l.nome_loja}">${l.nome_loja}</div>
       ${potDesc ? `<span class="pot-label pot-${potClass}">${potDesc}</span>` : ''}
-      ${horaLabel ? `<div class="hora-ok">${horaLabel}</div>` : ''}
+      ${total > 0 ? `<div class="visit-count"><span>${total}</span> vis.</div>` : ''}
       ${!temGeo ? `<div class="sem-gps-badge">⚠ sem GPS</div>` : ''}
     </div>`;
   }).join('');
