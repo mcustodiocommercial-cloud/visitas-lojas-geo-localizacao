@@ -40,7 +40,7 @@
     .logo em { color: #fff; font-style: normal; font-weight: 400; }
     nav button {
       background: none; border: none; color: rgba(255,255,255,0.6);
-      font-family: var(--font); font-size: 1.5rem; font-weight: 500;
+      font-family: var(--font); font-size: 1rem; font-weight: 500; display:flex; align-items:center; justify-content:center;
       padding: 6px 11px; border-radius: 8px; cursor: pointer;
       transition: all .15s; white-space: nowrap; flex-shrink: 0;
     }
@@ -84,55 +84,79 @@
     .search-bar::placeholder { color: var(--dim); }
     .search-bar:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
 
-    /* PILLS */
-    .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-    .pill {
-      background: #fff; border: 1.5px solid var(--border);
-      border-radius: 20px; padding: 4px 12px; font-size: 0.72rem; font-weight: 500;
-      cursor: pointer; color: var(--dim); transition: all .15s; font-family: var(--font);
+    /* GRID DE CARDS */
+    .loja-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
     }
-    .pill:hover { border-color: var(--green); color: var(--green); }
-    .pill.active { background: var(--green); border-color: var(--green); color: #fff; }
 
-    /* LOJA ITEM */
+    /* CARD DE LOJA */
     .loja-item {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 13px 15px; margin-bottom: 9px;
-      display: flex; align-items: center; gap: 12px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 8px 8px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; text-align: center;
       transition: all .2s; box-shadow: var(--shadow);
+      cursor: default; position: relative; min-height: 90px;
     }
     .loja-item:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-    .loja-item.visitada { border-color: var(--green); border-left: 4px solid var(--green); background: linear-gradient(135deg,#fff,var(--green-pale)); }
-    .loja-item.proxima  { border-color: var(--orange); border-left: 4px solid var(--orange); background: linear-gradient(135deg,#fff,#fffbf0); animation: glow .8s ease-in-out infinite alternate; }
-    @keyframes glow { from { box-shadow: var(--shadow); } to { box-shadow: 0 0 18px rgba(245,158,11,0.35); } }
-    .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: #d1e8dd; border: 2px solid var(--border); }
-    .dot.ok   { background: var(--green); border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
-    .dot.near { background: var(--orange); border-color: var(--orange); animation: pulse 1s infinite; }
-    .loja-info { flex: 1; min-width: 0; }
-    .loja-nome { font-weight: 600; font-size: 0.87rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--navy); }
-    .loja-end  { font-size: 0.72rem; color: var(--dim); margin-top: 2px; }
-    .loja-dist { font-size: 0.68rem; color: var(--orange); margin-top: 2px; font-weight: 600; }
-    .hora-ok     { font-size: 0.68rem; color: var(--green); margin-top: 2px; font-weight: 500; }
-    .timer-visita { font-size: 0.68rem; color: var(--orange); margin-top: 4px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
-    .timer-bar-wrap { background: #e0ede8; border-radius: 20px; height: 5px; width: 80px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 4px; }
-    .timer-bar { background: var(--orange); height: 100%; border-radius: 20px; transition: width 1s linear; }
-    .tempo-badge { font-size: 0.63rem; background: #fff3cd; color: #856404; border: 1px solid #ffc107; padding: 2px 7px; border-radius: 10px; margin-left: 4px; font-weight: 600; }
-    .badge { font-size: 0.63rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; background: rgba(13,45,79,0.07); color: var(--navy); }
-    .btn-marcar {
-      background: var(--navy); color: #fff; border: none;
-      padding: 7px 13px; border-radius: 8px;
-      font-family: var(--font); font-size: 0.76rem; font-weight: 600;
-      cursor: pointer; white-space: nowrap; transition: all .15s; flex-shrink: 0;
-    }
-    .btn-marcar:hover { background: var(--green); }
-    .btn-marcar:disabled { background: var(--green); cursor: default; opacity: .9; }
 
-    /* AUTO BADGE */
-    .auto-badge {
-      background: var(--green-soft); color: var(--green);
-      font-size: 0.62rem; font-weight: 700; padding: 2px 7px;
-      border-radius: 10px; margin-left: 6px; vertical-align: middle;
+    /* Visitada recentemente — verde */
+    .loja-item.visitada-recente {
+      border-color: var(--green);
+      border-width: 3px;
+      background: linear-gradient(160deg, #fff 60%, var(--green-pale));
     }
+
+    /* Nome da loja truncado */
+    .loja-nome {
+      font-weight: 600; font-size: 0.72rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      color: var(--navy); width: 100%;
+    }
+
+    /* Visitada recente: borda grossa verde */
+    .loja-item.visitada-recente {
+      border-color: var(--green) !important;
+      border-width: 3px !important;
+    }
+    .loja-item.visitada-recente::after {
+      content: '✓';
+      position: absolute; top: 4px; left: 6px;
+      font-size: 0.65rem; color: var(--green); font-weight: 700;
+    }
+
+    /* Label de potencial com cor por faixa */
+    .pot-label {
+      font-size: 0.6rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px;
+      letter-spacing: .03em; width: 100%; text-align: center;
+    }
+    .pot-label.pot-A { background: #FFD700; color: #000; }
+    .pot-label.pot-B { background: #FFA500; color: #000; }
+    .pot-label.pot-C { background: #009c3b; color: #fff; }
+    .pot-label.pot-D { background: #1a56db; color: #fff; }
+    .pot-label.pot-E { background: #7e3af2; color: #fff; }
+    .pot-label.pot-F { background: #111827; color: #fff; }
+    .pot-label.pot-x { background: #e9ecef; color: #6c757d; }
+
+    /* Contador de visitas */
+    .visit-count {
+      font-size: 0.58rem; color: var(--dim); font-weight: 500;
+      position: absolute; top: 5px; right: 6px;
+    }
+    .visit-count span { color: var(--green); font-weight: 700; }
+
+    /* Hora da última visita */
+    .hora-ok { font-size: 0.58rem; color: var(--green); font-weight: 600; }
+
+    /* sem GPS badge */
+    .sem-gps-badge { font-size: 0.55rem; color: var(--orange); font-weight: 600; }
+
+    .loja-dist { display: none; } /* não mostrar distância nos cards */
 
     /* NOTIFICAÇÃO FLUTUANTE */
     #notif {
@@ -230,9 +254,21 @@
 
 <nav>
   <span class="logo">📍 Visitas <em>de Lojas</em></span>
-  <button onclick="showPage('rotas')"     id="nav-rotas"     class="active">🗺️ <span>Rotas</span></button>
-  <button onclick="showPage('historico')" id="nav-historico">📋 <span>Histórico</span></button>
-  <button onclick="showPage('painel')"    id="nav-painel">⚙️ <span>Painel</span></button>
+  <button onclick="showPage('rotas')" id="nav-rotas" class="active" title="Rotas">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+    </svg>
+  </button>
+  <button onclick="showPage('historico')" id="nav-historico" title="Histórico">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+    </svg>
+  </button>
+  <button onclick="showPage('painel')" id="nav-painel" title="Painel">
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/>
+    </svg>
+  </button>
 </nav>
 
 <!-- BARRA GPS -->
@@ -265,8 +301,7 @@
   </div>
 
   <input class="search-bar" type="text" placeholder="🔍 Buscar loja ou bairro..." oninput="filtrar()" id="busca" />
-  <div class="pills" id="pills"></div>
-  <div id="lista"><div class="msg">Conectando...</div></div>
+  <div class="loja-grid" id="lista"><div class="msg" style="grid-column:1/-1">Conectando...</div></div>
 </div>
 
 <!-- HISTÓRICO -->
@@ -428,13 +463,7 @@ function pararGPS() {
   if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   posAtual = null;
   setGpsStatus('off', 'GPS desligado — ative o rastreamento');
-  // Remove destaques de proximidade
-  document.querySelectorAll('.loja-item.proxima').forEach(el => {
-    el.classList.remove('proxima');
-    el.querySelector('.dot')?.classList.remove('near');
-    const d = el.querySelector('.loja-dist');
-    if (d) d.remove();
-  });
+
 }
 
 function setGpsStatus(estado, txt) {
@@ -462,27 +491,6 @@ async function onPosicao(pos) {
     if (!loja.latitude || !loja.longitude) continue;
 
     const dist = distancia(latitude, longitude, loja.latitude, loja.longitude);
-
-    // Destaca lojas próximas (< 200m)
-    const itemEl = document.getElementById('it-' + loja.id);
-    if (itemEl) {
-      if (dist < 200 && !loja.visitada_hoje) {
-        itemEl.classList.add('proxima');
-        itemEl.querySelector('.dot')?.classList.add('near');
-        let distEl = itemEl.querySelector('.loja-dist');
-        if (!distEl) {
-          distEl = document.createElement('div');
-          distEl.className = 'loja-dist';
-          itemEl.querySelector('.loja-end')?.insertAdjacentElement('afterend', distEl);
-        }
-        distEl.textContent = `📡 ${Math.round(dist)}m de distância`;
-      } else {
-        itemEl.classList.remove('proxima');
-        itemEl.querySelector('.dot')?.classList.remove('near');
-        const distEl = itemEl.querySelector('.loja-dist');
-        if (distEl) distEl.remove();
-      }
-    }
 
     // Marca automaticamente só se: dentro do raio E o GPS estiver com boa precisão
     if (dist <= RAIO_M && precisaoBoa) {
@@ -514,22 +522,12 @@ async function registrarVisita(loja, lat, lon, dist, automatica = false) {
   loja.visitada_hoje = true;
   loja.ultima_visita = new Date().toISOString();
 
-  const itemEl = document.getElementById('it-' + loja.id);
-  if (itemEl) {
-    itemEl.classList.remove('proxima');
-    itemEl.classList.add('visitada');
-    const dot = itemEl.querySelector('.dot');
-    if (dot) { dot.className = 'dot ok'; }
-    const btn = itemEl.querySelector('.btn-marcar');
-    if (btn) { btn.disabled = true; btn.textContent = '✓ Ok'; }
-    const hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    const distEl = itemEl.querySelector('.loja-dist');
-    if (distEl) distEl.remove();
-    const endEl = itemEl.querySelector('.loja-end');
-    if (endEl && !itemEl.querySelector('.hora-ok')) {
-      endEl.insertAdjacentHTML('afterend', `<div class="hora-ok">✓ Visitada às ${hora}${automatica ? ' · auto' : ''}</div>`);
-    }
-  }
+  // Atualiza dados em memória
+  loja.total_visitas = (loja.total_visitas || 0) + 1;
+
+  // Re-renderiza o card via renderLista para refletir novo estado
+  renderLista();
+  renderStats();
 
   renderStats();
 
@@ -581,18 +579,38 @@ async function init() {
 }
 
 async function carregarLojas() {
-  let { data, error } = await sb.from('visitas_hoje').select('*').order('zona').order('nome_loja');
-  if (error) {
-    const { data: ls, error: e2 } = await sb.from('lojas').select('*').eq('ativa', true).order('zona').order('nome_loja');
-    if (e2) { document.getElementById('lista').innerHTML = `<div class="msg err">❌ ${e2.message}</div>`; return; }
-    const d = hoje();
-    const { data: vs } = await sb.from('visitas').select('loja_id, visitada_em').gte('visitada_em', d+'T00:00:00').lte('visitada_em', d+'T23:59:59');
-    const vm = {};
-    (vs||[]).forEach(v => { if (!vm[v.loja_id] || v.visitada_em > vm[v.loja_id]) vm[v.loja_id] = v.visitada_em; });
-    data = (ls||[]).map(l => ({ ...l, visitada_hoje: !!vm[l.id], ultima_visita: vm[l.id]||null }));
-  }
-  lojas = data || [];
-  renderPills(); renderLista(); renderStats();
+  // Busca lojas
+  const { data: ls, error: e2 } = await sb.from('lojas').select('*').eq('ativa', true).order('nome_loja');
+  if (e2) { document.getElementById('lista').innerHTML = `<div class="msg err" style="grid-column:1/-1">❌ ${e2.message}</div>`; return; }
+
+  // Visitas de hoje
+  const d = hoje();
+  const { data: vsHoje } = await sb.from('visitas').select('loja_id, visitada_em')
+    .gte('visitada_em', d+'T00:00:00').lte('visitada_em', d+'T23:59:59');
+
+  // Total de visitas por loja (all time)
+  const { data: vsTotais } = await sb.from('visitas').select('loja_id');
+
+  // Ultima visita por loja (all time)
+  const { data: vsUltima } = await sb.from('visitas').select('loja_id, visitada_em').order('visitada_em', { ascending: false });
+
+  const vmHoje = {};
+  (vsHoje||[]).forEach(v => { if (!vmHoje[v.loja_id] || v.visitada_em > vmHoje[v.loja_id]) vmHoje[v.loja_id] = v.visitada_em; });
+
+  const vmTotal = {};
+  (vsTotais||[]).forEach(v => { vmTotal[v.loja_id] = (vmTotal[v.loja_id]||0) + 1; });
+
+  const vmUltima = {};
+  (vsUltima||[]).forEach(v => { if (!vmUltima[v.loja_id]) vmUltima[v.loja_id] = v.visitada_em; });
+
+  lojas = (ls||[]).map(l => ({
+    ...l,
+    visitada_hoje: !!vmHoje[l.id],
+    ultima_visita: vmUltima[l.id] || null,
+    total_visitas: vmTotal[l.id] || 0,
+  }));
+
+  renderLista(); renderStats();
 }
 
 function renderStats() {
@@ -602,53 +620,58 @@ function renderStats() {
   document.getElementById('sPend').textContent  = lojas.length - v;
 }
 
-function renderPills() {
-  const zonas = ['Todas', ...new Set(lojas.map(l => l.zona).filter(Boolean))];
-  document.getElementById('pills').innerHTML = zonas.map(z =>
-    `<span class="pill ${zonaAtiva===z?'active':''}" onclick="setZona('${z}')">${z}</span>`
-  ).join('');
-}
+function filtrar() { renderLista(); }
 
-function setZona(z) { zonaAtiva = z; renderPills(); renderLista(); }
-function filtrar()  { renderLista(); }
+// Lógica de "visitada recente": true se visitada nos últimos N dias
+// Para potencial C/D/E/F → 3 dias. Para A/B → sem limite (sempre verde até reset)
+function visitadaRecente(loja) {
+  if (!loja.ultima_visita) return false;
+  const pot = (loja.potencial || '').toUpperCase().trim();
+  const alta = ['C','D','E','F'].includes(pot);
+  const limite = alta ? 3 : 9999; // A e B ficam verdes sem prazo
+  const dias = (Date.now() - new Date(loja.ultima_visita).getTime()) / 86400000;
+  return dias <= limite;
+}
 
 function renderLista() {
   const q  = document.getElementById('busca').value.toLowerCase();
   const fl = lojas.filter(l => {
-    const mz = zonaAtiva === 'Todas' || l.zona === zonaAtiva;
-    const ms = !q || (l.nome_loja||'').toLowerCase().includes(q) || (l.bairro||'').toLowerCase().includes(q);
-    return mz && ms;
+    return !q || (l.nome_loja||'').toLowerCase().includes(q) || (l.bairro||'').toLowerCase().includes(q);
   });
 
-  if (!fl.length) { document.getElementById('lista').innerHTML = '<div class="msg">Nenhuma loja encontrada</div>'; return; }
-
-  // Ordena: próximas primeiro se GPS ativo
-  if (posAtual) {
-    fl.sort((a, b) => {
-      if (a.visitada_hoje !== b.visitada_hoje) return a.visitada_hoje ? 1 : -1;
-      if (!a.latitude || !b.latitude) return 0;
-      return distancia(posAtual.latitude, posAtual.longitude, a.latitude, a.longitude)
-           - distancia(posAtual.latitude, posAtual.longitude, b.latitude, b.longitude);
-    });
+  if (!fl.length) {
+    document.getElementById('lista').innerHTML = '<div class="msg" style="grid-column:1/-1">Nenhuma loja encontrada</div>';
+    return;
   }
 
   document.getElementById('lista').innerHTML = fl.map(l => {
-    const hora = l.ultima_visita
-      ? new Date(l.ultima_visita).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
-      : null;
-    const temGeo = !!(l.latitude && l.longitude);
-    return `
-    <div class="loja-item ${l.visitada_hoje?'visitada':''}" id="it-${l.id}">
-      <div class="dot ${l.visitada_hoje?'ok':''}"></div>
-      <div class="loja-info">
-        <div class="loja-nome">${l.nome_loja}${temGeo ? '' : ' <span style="font-size:0.6rem;color:var(--orange);font-weight:600">sem GPS</span>'}</div>
-        <div class="loja-end">${[l.logradouro, l.numero, l.bairro, l.cep].filter(Boolean).join(' · ')}</div>
-        ${hora ? `<div class="hora-ok">✓ Visitada às ${hora}</div>` : ''}
-      </div>
-      <span class="badge">${l.zona||'?'}</span>
-      <button class="btn-marcar" ${l.visitada_hoje?'disabled':''} onclick="marcar('${l.id}',this)">
-        ${l.visitada_hoje ? '✓ Ok' : '📍 Marcar'}
-      </button>
+    const pot     = (l.potencial || '?').toString().toUpperCase().trim().charAt(0);
+    const potClass = ['A','B','C','D','E','F'].includes(pot) ? pot : '?';
+    const recente  = visitadaRecente(l);
+    const visClass = recente ? 'visitada-recente' : '';
+
+    // Hora da última visita (hoje ou histórico)
+    const horaLabel = l.ultima_visita
+      ? (() => {
+          const dt = new Date(l.ultima_visita);
+          const dStr = dt.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'});
+          const hStr = dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+          const isToday = dt.toDateString() === new Date().toDateString();
+          return isToday ? `✓ ${hStr}` : `✓ ${dStr}`;
+        })()
+      : '';
+
+    const total    = l.total_visitas || 0;
+    const temGeo   = !!(l.latitude && l.longitude);
+
+    const potDesc = potClass === 'A' ? 'A. 1 Gravame' : potClass === 'B' ? 'B. 2-5 Gravames' : potClass === 'C' ? 'C. 6-10 Gravames' : potClass === 'D' ? 'D. 11-20 Gravames' : potClass === 'E' ? 'E. 21-30 Gravames' : potClass === 'F' ? 'F. > 30 Gravames' : '';
+
+    return `<div class="loja-item ${visClass}" id="it-${l.id}">
+      ${total > 0 ? `<div class="visit-count"><span>${total}</span> vis.</div>` : ''}
+      <div class="loja-nome" title="${l.nome_loja}">${l.nome_loja}</div>
+      ${potDesc ? `<span class="pot-label pot-${potClass}">${potDesc}</span>` : ''}
+      ${horaLabel ? `<div class="hora-ok">${horaLabel}</div>` : ''}
+      ${!temGeo ? `<div class="sem-gps-badge">⚠ sem GPS</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -794,6 +817,7 @@ function processarArquivo(file) {
       bairro:           col(r, 'bairro', 'BAIRRO'),
       cep:              col(r, 'cep', 'CEP'),
       zona:             col(r, 'zona', 'ZONA'),
+      potencial:        col(r, 'potencial', 'POTENCIAL'),
     })).filter(l => l.nome_loja);
 
     if (!dados.length) return toast('Nenhuma loja encontrada', 'err');
