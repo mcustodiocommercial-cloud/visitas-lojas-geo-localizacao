@@ -84,39 +84,45 @@
     .search-bar::placeholder { color: var(--dim); }
     .search-bar:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
 
-    /* GRID DE CARDS */
+    /* LISTA DE LOJAS */
     .loja-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      display: flex; flex-direction: column; gap: 0;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      overflow: hidden; background: var(--surface);
     }
 
-    /* CARD DE LOJA */
-    .loja-item {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 7px 5px 6px;
-      display: flex; flex-direction: column; align-items: center;
-      gap: 3px; text-align: center;
-      transition: all .2s; box-shadow: var(--shadow);
-      cursor: default; position: relative;
-      min-height: 0; overflow: hidden;
+    /* Cabeçalho da lista */
+    .loja-list-header {
+      display: grid; grid-template-columns: 1fr 130px 48px;
+      padding: 8px 12px; background: var(--surface2);
+      font-size: 0.65rem; font-weight: 700; color: var(--navy);
+      text-transform: uppercase; letter-spacing: .06em;
+      border-bottom: 1.5px solid var(--border);
     }
-    .loja-item:hover { box-shadow: var(--shadow-md); }
+
+    /* LINHA DE LOJA */
+    .loja-item {
+      display: grid; grid-template-columns: 1fr 130px 48px;
+      align-items: center; gap: 6px;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+      cursor: default; position: relative;
+    }
+    .loja-item:last-child { border-bottom: none; }
+    .loja-item:hover { background: var(--surface2); }
 
     /* Visitada recentemente — fundo verde */
     .loja-item.visitada-recente {
-      border-color: #27ae60 !important;
-      border-width: 2.5px !important;
       background: #89df75 !important;
     }
+    .loja-item.visitada-recente:hover { background: #7dd468 !important; }
 
     /* Nome da loja truncado em 1 linha */
     .loja-nome {
-      font-weight: 600; font-size: 0.65rem;
+      font-weight: 600; font-size: 0.78rem;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      color: var(--navy); width: 100%;
+      color: var(--navy);
     }
 
     /* Visitada recente: borda grossa verde */
@@ -128,10 +134,11 @@
 
     /* Label de potencial com cor por faixa */
     .pot-label {
-      font-size: 0.58rem; font-weight: 700;
-      padding: 2px 4px; border-radius: 5px;
-      letter-spacing: .02em; width: 100%; text-align: center;
+      font-size: 0.62rem; font-weight: 700;
+      padding: 3px 8px; border-radius: 20px;
+      letter-spacing: .02em; text-align: center;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: inline-block; max-width: 128px;
     }
     .pot-label.pot-A { background: #FFD700; color: #000; }
     .pot-label.pot-B { background: #FFA500; color: #000; }
@@ -141,11 +148,11 @@
     .pot-label.pot-F { background: #111827; color: #fff; }
     .pot-label.pot-x { background: #e9ecef; color: #6c757d; }
 
-    /* Contador de visitas — abaixo do label */
+    /* Contador de visitas */
     .visit-count {
-      font-size: 0.55rem; color: var(--dim); font-weight: 500;
+      font-size: 0.78rem; color: #000; font-weight: 700;
+      text-align: right;
     }
-    .visit-count span { color: #000; font-weight: 700; }
 
     /* Hora da última visita */
     .hora-ok { font-size: 0.58rem; color: var(--green); font-weight: 600; }
@@ -291,14 +298,8 @@
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat blue"><div class="num" id="sTotal">—</div><div class="lbl">Total</div></div>
-    <div class="stat green"><div class="num" id="sVisit">—</div><div class="lbl">Visitadas</div></div>
-    <div class="stat ora"><div class="num" id="sPend">—</div><div class="lbl">Pendentes</div></div>
-  </div>
-
-  <input class="search-bar" type="text" placeholder="🔍 Buscar loja ou bairro..." oninput="filtrar()" id="busca" />
-  <div class="loja-grid" id="lista"><div class="msg" style="grid-column:1/-1">Conectando...</div></div>
+  <input class="search-bar" type="text" placeholder="🔍 Buscar loja..." oninput="filtrar()" id="busca" />
+  <div class="loja-grid" id="lista"><div class="msg" >Conectando...</div></div>
 </div>
 
 <!-- HISTÓRICO -->
@@ -526,7 +527,6 @@ async function registrarVisita(loja, lat, lon, dist, automatica = false) {
   renderLista();
   renderStats();
 
-  renderStats();
 
   if (automatica) notificar(loja.nome_loja, dist);
   else toast('Visita registrada! 📍', 'ok');
@@ -578,7 +578,7 @@ async function init() {
 async function carregarLojas() {
   // Busca lojas
   const { data: ls, error: e2 } = await sb.from('lojas').select('*').eq('ativa', true).order('nome_loja');
-  if (e2) { document.getElementById('lista').innerHTML = `<div class="msg err" style="grid-column:1/-1">❌ ${e2.message}</div>`; return; }
+  if (e2) { document.getElementById('lista').innerHTML = `<div class="msg err" >❌ ${e2.message}</div>`; return; }
 
   // Visitas de hoje
   const d = hoje();
@@ -607,15 +607,10 @@ async function carregarLojas() {
     total_visitas: vmTotal[l.id] || 0,
   }));
 
-  renderLista(); renderStats();
+  renderLista();
 }
 
-function renderStats() {
-  const v = lojas.filter(l => l.visitada_hoje).length;
-  document.getElementById('sTotal').textContent = lojas.length;
-  document.getElementById('sVisit').textContent = v;
-  document.getElementById('sPend').textContent  = lojas.length - v;
-}
+function renderStats() { /* stats removidos */ }
 
 function filtrar() { renderLista(); }
 
@@ -632,42 +627,35 @@ function visitadaRecente(loja) {
 
 function renderLista() {
   const q  = document.getElementById('busca').value.toLowerCase();
-  const fl = lojas.filter(l => {
-    return !q || (l.nome_loja||'').toLowerCase().includes(q) || (l.bairro||'').toLowerCase().includes(q);
-  });
+  const fl = lojas.filter(l =>
+    !q || (l.nome_loja||'').toLowerCase().includes(q) || (l.bairro||'').toLowerCase().includes(q)
+  );
 
   if (!fl.length) {
-    document.getElementById('lista').innerHTML = '<div class="msg" style="grid-column:1/-1">Nenhuma loja encontrada</div>';
+    document.getElementById('lista').innerHTML = '<div class="msg">Nenhuma loja encontrada</div>';
     return;
   }
 
-  document.getElementById('lista').innerHTML = fl.map(l => {
-    const pot     = (l.potencial || '?').toString().toUpperCase().trim().charAt(0);
+  const header = `<div class="loja-list-header"><span>LOJA</span><span>POTENCIAL</span><span style="text-align:center">VIS.</span></div>`;
+
+  document.getElementById('lista').innerHTML = header + fl.map(l => {
+    const pot      = (l.potencial || '').toString().toUpperCase().trim().charAt(0);
     const potClass = ['A','B','C','D','E','F'].includes(pot) ? pot : '?';
     const recente  = visitadaRecente(l);
     const visClass = recente ? 'visitada-recente' : '';
-
-    // Hora da última visita (hoje ou histórico)
-    const horaLabel = l.ultima_visita
-      ? (() => {
-          const dt = new Date(l.ultima_visita);
-          const dStr = dt.toLocaleDateString('pt-BR', {day:'2-digit',month:'2-digit'});
-          const hStr = dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-          const isToday = dt.toDateString() === new Date().toDateString();
-          return isToday ? `✓ ${hStr}` : `✓ ${dStr}`;
-        })()
-      : '';
-
     const total    = l.total_visitas || 0;
     const temGeo   = !!(l.latitude && l.longitude);
-
-    const potDesc = potClass === 'A' ? 'A. 1 Gravame' : potClass === 'B' ? 'B. 2-5 Gravames' : potClass === 'C' ? 'C. 6-10 Gravames' : potClass === 'D' ? 'D. 11-20 Gravames' : potClass === 'E' ? 'E. 21-30 Gravames' : potClass === 'F' ? 'F. > 30 Gravames' : '';
+    const potDesc  = potClass === 'A' ? 'A. 1 Gravame'
+                   : potClass === 'B' ? 'B. 2-5 Gravames'
+                   : potClass === 'C' ? 'C. 6-10 Gravames'
+                   : potClass === 'D' ? 'D. 11-20 Gravames'
+                   : potClass === 'E' ? 'E. 21-30 Gravames'
+                   : potClass === 'F' ? 'F. > 30 Gravames' : '';
 
     return `<div class="loja-item ${visClass}" id="it-${l.id}">
-      <div class="loja-nome" title="${l.nome_loja}">${l.nome_loja}</div>
-      ${potDesc ? `<span class="pot-label pot-${potClass}">${potDesc}</span>` : ''}
-      ${total > 0 ? `<div class="visit-count"><span>${total}</span> vis.</div>` : ''}
-      ${!temGeo ? `<div class="sem-gps-badge">⚠ sem GPS</div>` : ''}
+      <div class="loja-nome" title="${l.nome_loja}">${l.nome_loja}${!temGeo ? ' <span class="sem-gps-badge">⚠</span>' : ''}</div>
+      <div>${potDesc ? `<span class="pot-label pot-${potClass}">${potDesc}</span>` : '—'}</div>
+      <div class="visit-count">${total > 0 ? total : ''}</div>
     </div>`;
   }).join('');
 }
